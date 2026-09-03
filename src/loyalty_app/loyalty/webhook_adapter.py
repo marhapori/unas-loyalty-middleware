@@ -1,13 +1,26 @@
 """Adapter that extracts the UNAS customer id from a customer_registration webhook.
 
-The exact JSON shape UNAS sends for this event is not documented with a full
-example (the webhook-ellenorzes doc only shows HMAC verification, not the event
-payload schema). This adapter is deliberately isolated and defensive: it tries a
-handful of plausible field paths, and if none match it does NOT guess further -
-it reports failure so the event is queued for manual review instead of silently
-dropping or misinterpreting a webhook. Once a real payload has been captured in
-`webhook_events.raw_payload_masked`, extend `_CANDIDATE_PATHS` accordingly and
-remove this note. See docs/KNOWN_LIMITATIONS.md.
+Verified 2026-09-03 against a real webhook delivery (customer_registration,
+sent to a live ngrok-tunneled instance from a real UNAS test shop). The actual
+top-level JSON shape is:
+
+    {
+        "username": "...", "email": "...",
+        "contact": {...}, "shipping": {...}, "invoice": {...},
+        "customer_language": "hu", "hook_service_section": "cust",
+        "shopID": "62947", "customerID": "375650086",
+        "subscribedToNewsletter": false, "newsletterSubscriptionConfirmed": false,
+        "language": "hu", "customerType": "private",
+        "customerParameters": {"6590861": {"name": "...", "value": ""}}
+    }
+
+so the customer id lives at the top-level "customerID" key. The topic also
+arrives as the "X-Unas-Topic" request header (not read here - see
+api/webhook_routes.py). The extra speculative field-name candidates below are
+kept as a defensive fallback in case UNAS's shape differs across shop
+configurations or changes over time - if none match, the event is queued for
+manual review instead of silently dropping or misinterpreting a webhook (see
+docs/KNOWN_LIMITATIONS.md).
 """
 
 from __future__ import annotations
@@ -16,6 +29,8 @@ import json
 from dataclasses import dataclass
 
 _CANDIDATE_PATHS: list[tuple[str, ...]] = [
+    ("customerID",),  # confirmed real UNAS field name
+    ("CustomerID",),
     ("Id",),
     ("id",),
     ("CustomerId",),

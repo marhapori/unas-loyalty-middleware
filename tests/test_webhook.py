@@ -10,6 +10,28 @@ from loyalty_app.security import hash_token
 from fake_unas import FakeUnasClient
 
 
+def test_adapter_extracts_id_from_real_unas_webhook_payload():
+    # Captured 2026-09-03 from a real UNAS customer_registration webhook
+    # delivery (via ngrok, HMAC-verified) - see webhook_adapter.py docstring.
+    real_payload = {
+        "username": "pillerk+5@gmail.com",
+        "email": "pillerk+5@gmail.com",
+        "contact": {"name": "Teszt Balazs", "phone": "+36202016166", "mobile": ""},
+        "customer_language": "hu",
+        "hook_service_section": "cust",
+        "shopID": "62947",
+        "customerID": "375650086",
+        "subscribedToNewsletter": False,
+        "newsletterSubscriptionConfirmed": False,
+        "language": "hu",
+        "customerType": "private",
+        "customerParameters": {"6590861": {"name": "Husegkartya azonosito", "value": ""}},
+    }
+    result = parse_customer_registration_payload(json.dumps(real_payload).encode("utf-8"))
+    assert result.unas_customer_id == "375650086"
+    assert result.matched_path == "customerID"
+
+
 def test_adapter_extracts_id_from_common_field_names():
     for payload in (
         {"Id": "41704472"},

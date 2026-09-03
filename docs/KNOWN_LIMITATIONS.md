@@ -1,34 +1,41 @@
 # Ismert korlatok es eles indulas elotti teendok
 
+## 2026-09-03: elso eles UNAS-teszt eredmenye
+
+Valodi UNAS API-kulccsal es egy valodi teszt webshoppal (`webaruhazmester01.unas.hu`)
+elvegeztuk az elso vegponti tesztet (ngrok-alagutas webhook + kozvetlen
+API-hivasok). Eredmeny:
+
+- ✅ **HMAC webhook-alairas ellenorzes** valodi UNAS-alairassal helyesen mukodik.
+- ✅ **`getCustomer` keres `<Params>` gyokerelem-feltetelezes beigazolodott** -
+  valodi `Id` szuro es lapozas is helyesen mukodott.
+- ✅ **`getCustomer` valasz feldolgozas** (`Contact/Name`, `Email`,
+  `PointsAccount/Balance`, `Params/Param`) helyesen mukodik eles adaton.
+- ✅ **`setCustomer` token-visszairas** ténylegesen megtortent es fuggetlen
+  visszaolvasassal is megerositve.
+- 🔧 **Talalt es javitott hiba**: a valodi `customer_registration` webhook JSON
+  teste a vasarlo-azonositot a top-level **`customerID`** kulcs alatt kuldi
+  (nem `Id`/`CustomerId`/stb., ahogy korabban feltetelezve volt). A
+  `loyalty_app/loyalty/webhook_adapter.py` `_CANDIDATE_PATHS` listaja mar
+  frissitve lett a valodi mezonevvel, es a docstringje tartalmazza a teljes
+  valodi payload-peldat. A hiba a tervezett vedohalonak koszonhetoen semmilyen
+  adatvesztest nem okozott - az esemeny `needs_review` allapotba kerult,
+  utana a javitott kod ujra sikeresen feldolgozta.
+
 ## Amit valos UNAS API-kulccsal meg ellenorizni kell
 
-1. **`getCustomer` keres gyokerelem**: a `getProduct`/`getOrder` mintajara
-   `<Params>` gyokerelemet feltetelezunk a `getCustomer` keresnel (lasd
-   `loyalty_app/unas/xml_utils.py` tetejen levo megjegyzest). A hivatalos
-   dokumentacio (`getCustomer keres` oldal) felsorolja a szuromezoket, de nem
-   mutat teljes pelda-XML-t. A `getCustomer` **valasz** szerkezetet, a
-   `setCustomer` keres/valasz szerkezetet es a login valasz mezoit viszont **elo
-   dokumentaciobol ellenoriztuk** 2026-09-03-an (lasd az XML builderek/parserek
-   docstringjeit) - ezek nagy biztonsaggal helyesek.
-2. **Auth-hiba HTTP-statusza**: a `UnasClient` 401/403 HTTP-statuszt kezel
+1. **Auth-hiba HTTP-statusza**: a `UnasClient` 401/403 HTTP-statuszt kezel
    hitelesitesi hibakent (es ekkor egyszer ujra-bejelentkezik). A gyakorlati
    utmutato szerint az altalanos hibak jellemzoen HTTP 400 + `<Error>` XML-t
-   adnak - nem biztos, hogy a lejart/hibas token kulon 401-et kap. Ha az elso
-   valodi teszt azt mutatja, hogy a lejart token is 400-at ad, a
-   `unas/client.py` `_post_once` fuggvenyet kell ehhez igazitani (a hibauzenet
-   szovege alapjan).
-3. **`customer_registration` webhook payload szerkezete**: nincs hivatalos
-   pelda. A `loyalty_app/loyalty/webhook_adapter.py` tobb elterjedt
-   mezonev-mintat probal (`Id`, `CustomerId`, `Customer.Id` stb.), es ha
-   egyiket sem talalja, `webhook_events.process_status='needs_review'`-ra
-   allitja az esemenyt es elmenti a (maszkolt) nyers payloadot admin
-   attekintesre. **Az elso valodi webhook utan ellenorizd ezt a tablat, es
-   sziikseg eseten egeszitsd ki az adaptert.**
-4. **`getCustomer` valasz uzleti mezoi**: a `PointsAccount.Balance` `float`
-   tipusu a UNAS adatszerkezetben, bar a peldak egesz ertekeket mutatnak. A
-   kod `int()`-tel kerekit lefele hiba nelkul, de ha a valosagban tizedes
-   pontertekek is elofordulnanak, ezt at kell gondolni (jelenleg a
-   specifikacio es minden pelda egesz pontokat felteteleez).
+   adnak - nem biztos, hogy a lejart/hibas token kulon 401-et kap. Ezt meg nem
+   volt modunk kulon tesztelni (a login mindvegig sikeres volt a teszt soran).
+   Ha egy kesobbi futasnal azt tapasztaljatok, hogy a lejart token is 400-at
+   ad, a `unas/client.py` `_post_once` fuggvenyet kell ehhez igazitani (a
+   hibauzenet szovege alapjan).
+2. **`getCustomer` valasz uzleti mezoi**: a `PointsAccount.Balance` `float`
+   tipusu a UNAS adatszerkezetben - ezt eles teszt is megerositette (pl.
+   `50.0` ertekkel terve vissza). A kod `int()`-tel kerekit lefele hiba
+   nelkul; ha tizedes pontertekek is elofordulnanak, ezt at kell gondolni.
 
 ## Szandekosan nem implementalt (kesobbi fazis)
 
@@ -53,8 +60,12 @@
   ellen. A HTTP route-reteg (bejelentkezes, CSRF, rate limit, session) elesben,
   bongeszoben lett manualisan vegigtesztelve egy helyi mock UNAS-szerver ellen
   (lasd fejlesztoi jegyzetek), de nincs hozza automatizalt integraciós teszt.
-- Nincs valodi UNAS API-kulccsal vegzett teszt ebben a fejlesztesi korben -
-  ezt az elso eles/staging UNAS-kulccsal el kell vegezni a
+- Valodi UNAS API-kulccsal es egy valodi teszt webshoppal mar tortent egy
+  vegponti teszt (lasd fent, 2026-09-03), de csak egyetlen teszt vasarlon: uj
+  vasarlo regisztracioja -> webhook -> tokenkiosztas. A jovairas/bevaltas
+  folyamatot (setCustomer PointsAccount.Balance-szal) meg NEM tesztelte
+  senki valodi UNAS-on, csak a mock szerverrel es a service-szintu tesztekkel
+  - ezt erdemes a kovetkezo lepesben elvegezni a
   [UNAS_SETUP.md](UNAS_SETUP.md) "Ellenorzes" szakasza szerint, mielott
   eles vasarlokon hasznaljatok.
 - A QR-olvaso hardveres viselkedese (USB HID billentyuzet-emulacio) nem
