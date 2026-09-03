@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bejelentkezes - Husegpont kassza</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body class="login-body">
+  <main class="login-card">
+    <h1>Husegpont kassza</h1>
+    {% if error %}
+      <p class="error-banner">Hibas felhasznalonev vagy jelszo.</p>
+    {% endif %}
+    <form method="post" action="/login">
+      <label>Felhasznalonev
+        <input type="text" name="username" autocomplete="username" required autofocus />
+      </label>
+      <label>Jelszo
+        <input type="password" name="password" autocomplete="current-password" required />
+      </label>
+      <button type="submit">Belepes</button>
+    </form>
+  </main>
+</body>
+</html>
