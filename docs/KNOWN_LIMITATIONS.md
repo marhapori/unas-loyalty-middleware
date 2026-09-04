@@ -1,5 +1,16 @@
 # Ismert korlatok es eles indulas elotti teendok
 
+## Takaritando: veletlen teszt-adminfiok az eles (Render) adatbazisban
+
+A `/api/admin/bootstrap` vegpont egyik diagnosztikai teszthivasa kozben
+(2026-09-03, a Render-deploy ellenorzesekor) veletlenul letrejott egy `x`
+felhasznalonevu, `admin` szerepkoru fiok a `x` kodu (szinten teszt) boltban.
+Alacsony kockazatunak itelt, tudatosan meghagyott allapot - nincs
+torlo/deaktivalo funkciónk (a rendszer sehol nem tavolit el adatot,
+mindig csak visszavon), szoval ezt csak kozvetlen adatbazis-hozzaferessel
+(pl. a jovobeli Postgres-atallaskor) lehet majd rendbe tenni: a `users` tabla
+`x` username-u sorat torolni vagy `active=false`-ra allitani.
+
 ## 2026-09-03: elso eles UNAS-teszt eredmenye
 
 Valodi UNAS API-kulccsal es egy valodi teszt webshoppal (`webaruhazmester01.unas.hu`)
