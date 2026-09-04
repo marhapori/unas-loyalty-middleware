@@ -8,8 +8,13 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
+      # Point this at a Render Postgres instance's connection string (Internal
+      # Database URL) instead of leaving it as SQLite - Render's free Web Service
+      # disk is not persistent and gets wiped on every redeploy. "postgres://" or
+      # "postgresql://" as Render gives it works as-is (loyalty_app.db normalizes
+      # it to the psycopg3 driver automatically).
       - key: DATABASE_URL
-        value: sqlite:///./data/loyalty.db
+        sync: false
       - key: UNAS_API_BASE_URL
         value: https://api.unas.eu/shop
       - key: UNAS_API_KEY

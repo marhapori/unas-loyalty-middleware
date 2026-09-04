@@ -40,12 +40,33 @@ curl -X POST https://<nev>.onrender.com/api/admin/bootstrap \
    ures ertekkel a vegpont mindig `404`-et ad vissza (alapertelmezetten
    letiltva), igy nem marad nyitva egy admin-letrehozo vegpont a neten.
 
-**Ismert korlat**: az ingyenes Render Web Service csomag lemeze **nem tartos** -
-inaktivitas utani "elalvasnal" vagy uj deploynal a SQLite-fajl (es benne minden
-kasszas fiok/tranzakcio) elveszhet, es ilyenkor a fenti bootstrap-lepest ujra
-el kell vegezni. Ez jelenleg tudatosan elfogadott, ideiglenes allapot a
-tovabbi teszteleshez - eles hasznalat elott a Render Postgres hozzaadasa
-javasolt (lasd lent, "Atallas SQLite-rol Postgresre").
+### Render Postgres hasznalata (kotelezo, nem csak ajanlott)
+
+Ezt a gyakorlatban is megtapasztaltuk (2026-09-04): az ingyenes Render Web
+Service csomag lemeze **nem tartos** - egy sima kornyezeti valtozo-mentes is
+ujra-deployt indit, ami **a teljes SQLite-fajlt torli** (osszes kasszas fiokkal
+es tranzakcioval egyutt). Ez nem csak "elalvasnal" vagy inaktivitasnal
+tortenik, hanem barmilyen deploynal - igy SQLite-tal a Render Web Service
+gyakorlatilag hasznalhatatlan barmi tobbre, mint egy egyszeri, izolalt teszt.
+
+1. Render dashboard -> **New** -> **PostgreSQL**, valassz nevet (pl.
+   `unas-loyalty-db`), ingyenes/legolcsobb csomag.
+2. Amint kesz, masold ki az **Internal Database URL**-t (ha a web service
+   ugyanabban a Render regioban van - ez gyorsabb es nem szamit bele a
+   kulso savszelesseg-limitbe; External Database URL-t hasznalj, ha mashonnan
+   is el kell erni).
+3. A web service **Environment** fulen frissitsd a `DATABASE_URL` erteket erre
+   (a `postgres://` vagy `postgresql://` elotaggal ahogy Render adja - a kod
+   automatikusan `postgresql+psycopg://`-ra normalizalja).
+4. Mentes utan a redeploy lefuttatja az `alembic upgrade head`-et a Postgres
+   adatbazison is (mar ures tablakkal indul, ujra kell futtatni a bootstrap-
+   lepest az elso store/admin felhasznalohoz).
+5. Ettol kezdve deploy/redeploy nem torli tobbe az adatokat - a Postgres
+   kulon, tartos szolgaltatas, fuggetlenul a web service konteneretol.
+
+**Figyelem**: a Render ingyenes Postgres csomagjai jellemzoen idokorlatosak
+(pl. 30-90 nap utan lejarnak vagy fizetosre valtanak at) - ellenorizd a Render
+aktualis arazasi feltetleit, es tervezz ezzel eles hasznalat elott.
 
 ## Minimalis kovetelmeny
 

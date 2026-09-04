@@ -21,6 +21,18 @@ def _ensure_sqlite_dir(database_url: str) -> None:
             Path(raw_path).parent.mkdir(parents=True, exist_ok=True)
 
 
+def _normalize_database_url(database_url: str) -> str:
+    """Hosting platforms (Render, Heroku, ...) hand out Postgres connection
+    strings as ``postgres://`` or driver-less ``postgresql://`` - normalize
+    either to the psycopg3 driver SQLAlchemy needs, so pasting the platform's
+    connection string in as-is just works without manual editing."""
+    if database_url.startswith("postgres://"):
+        return "postgresql+psycopg://" + database_url.removeprefix("postgres://")
+    if database_url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + database_url.removeprefix("postgresql://")
+    return database_url
+
+
 def build_engine(database_url: str | None = None) -> Engine:
     """Create the SQLAlchemy engine.
 
@@ -38,7 +50,7 @@ def build_engine(database_url: str | None = None) -> Engine:
     loyalty_app.loyalty.service), so the same call sites work unchanged.
     """
     settings = get_settings()
-    url = database_url or settings.database_url
+    url = _normalize_database_url(database_url or settings.database_url)
     _ensure_sqlite_dir(url)
 
     is_sqlite = url.startswith("sqlite")
