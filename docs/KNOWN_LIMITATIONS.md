@@ -1,15 +1,36 @@
 # Ismert korlatok es eles indulas elotti teendok
 
-## Takaritando: veletlen teszt-adminfiok az eles (Render) adatbazisban
+## 2026-09-04: datetime naive/aware hiba Postgresen (megtalalva es javitva)
+
+Miutan a Render Web Service-t SQLite-rol Postgresre allitottuk at (lasd lent),
+a hatterworker minden iteracioban elszallt:
+`TypeError: can't compare offset-naive and offset-aware datetimes` a
+`webhook_events.next_attempt_at` mezo osszehasonlitasanal. Ok: a modellek
+`datetime` oszlopai nem voltak explicit idozona-tudatosra jelolve
+(`DateTime(timezone=True)`) - SQLite-on ez sosem okozott hibat (a hattér
+sosem kenyszeritette ki a kulonbseget azon a kodutant, amit teszteltunk), de
+Postgresen a `TIMESTAMP WITHOUT TIME ZONE` oszlop naiv datetime-ot ad vissza,
+ami a `datetime.now(timezone.utc)`-val valo osszehasonlitasnal elszallt.
+
+Javitva: minden datetime oszlop explicit `DateTime(timezone=True)` tipust
+kapott (`models.py`), uj migracio (`de2c0497de17`) allitja at a meglevo
+oszlopokat, es a `worker.py` osszehasonlitasa vedelmi normalizalast is kapott
+(`_aware()`), ugyanazt a mintat kovetve, amit a `service.py` mar korabban is
+hasznalt egy hasonlo helyen. Regressziosteszt: `tests/test_worker.py`.
+
+**Tanulsag**: a SQLite-alapu helyi tesztelés nem fedi le teljesen a Postgres
+viselkedeset ezen a teruleten - ha kesobb tovabbi datetime-osszehasonlitast
+irunk kodban, mindig `DateTime(timezone=True)` oszloptipust hasznaljunk, es
+kerdojelezzuk meg, ha egy DB-bol olvasott datetime-ot kozvetlenul
+osszehasonlitunk egy Python-oldali `datetime.now(...)`-val.
+
+## Megoldott: veletlen teszt-adminfiok
 
 A `/api/admin/bootstrap` vegpont egyik diagnosztikai teszthivasa kozben
-(2026-09-03, a Render-deploy ellenorzesekor) veletlenul letrejott egy `x`
-felhasznalonevu, `admin` szerepkoru fiok a `x` kodu (szinten teszt) boltban.
-Alacsony kockazatunak itelt, tudatosan meghagyott allapot - nincs
-torlo/deaktivalo funkciónk (a rendszer sehol nem tavolit el adatot,
-mindig csak visszavon), szoval ezt csak kozvetlen adatbazis-hozzaferessel
-(pl. a jovobeli Postgres-atallaskor) lehet majd rendbe tenni: a `users` tabla
-`x` username-u sorat torolni vagy `active=false`-ra allitani.
+(2026-09-03) veletlenul letrejott egy `x` felhasznalonevu adminfiok a teszt
+SQLite adatbazisban. Idokozben ez a teljes adatbazissal egyutt megszunt (lasd
+lent, "Render Postgres hasznalata") - nincs teendo, csak dokumentacios
+nyomkent hagyva itt.
 
 ## 2026-09-03: elso eles UNAS-teszt eredmenye
 

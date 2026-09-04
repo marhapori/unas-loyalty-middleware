@@ -38,6 +38,16 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _aware(dt: datetime) -> datetime:
+    """Defensive normalization: a datetime read back from the DB should already
+    be timezone-aware (see models.py's _TZ_DATETIME), but this guards against any
+    row written before that fix, or a differently-configured DB driver, from
+    crashing the comparison below with "can't compare offset-naive and
+    offset-aware datetimes" - the same class of bug that hit this exact line in
+    production (see docs/KNOWN_LIMITATIONS.md, 2026-09-04)."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+
 async def process_pending_webhooks(session: Session, unas_client: UnasClient, settings: Settings) -> int:
     due = session.execute(
         select(WebhookEvent).where(
@@ -47,7 +57,7 @@ async def process_pending_webhooks(session: Session, unas_client: UnasClient, se
 
     processed = 0
     for event in due:
-        if event.next_attempt_at is not None and event.next_attempt_at > _now():
+        if event.next_attempt_at is not None and _aware(event.next_attempt_at) > _now():
             continue
         await _process_one_webhook(session, unas_client, settings, event)
         processed += 1

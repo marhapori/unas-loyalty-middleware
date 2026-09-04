@@ -3,8 +3,17 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+# Postgres stores a plain (no-timezone) DateTime column as naive and hands naive
+# datetimes back, while our app code always compares against timezone-aware
+# datetime.now(timezone.utc) (see _now() below) - mixing the two raises
+# "can't compare offset-naive and offset-aware datetimes". SQLite is more lenient
+# here, so this only surfaced after switching to Postgres (see
+# docs/KNOWN_LIMITATIONS.md, 2026-09-04). Every datetime column must use this
+# timezone-aware type so both backends behave the same way.
+_TZ_DATETIME = DateTime(timezone=True)
 
 from loyalty_app.db import Base
 
@@ -47,7 +56,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(20))  # cashier | admin
     store_id: Mapped[str | None] = mapped_column(ForeignKey("stores.id"), nullable=True)
     active: Mapped[bool] = mapped_column(default=True)
-    created_at: Mapped[datetime] = mapped_column(default=_now)
+    created_at: Mapped[datetime] = mapped_column(_TZ_DATETIME, default=_now)
 
 
 class LoyaltyCustomer(Base):
@@ -59,9 +68,9 @@ class LoyaltyCustomer(Base):
     token_version: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[str] = mapped_column(String(20), default="active")  # active | revoked | pending
     display_name_cache: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(default=_now)
-    updated_at: Mapped[datetime] = mapped_column(default=_now, onupdate=_now)
-    last_synced_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(_TZ_DATETIME, default=_now)
+    updated_at: Mapped[datetime] = mapped_column(_TZ_DATETIME, default=_now, onupdate=_now)
+    last_synced_at: Mapped[datetime | None] = mapped_column(_TZ_DATETIME, nullable=True)
 
 
 class LoyaltyTransaction(Base):
@@ -91,8 +100,8 @@ class LoyaltyTransaction(Base):
     error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(default=_now)
-    applied_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(_TZ_DATETIME, default=_now)
+    applied_at: Mapped[datetime | None] = mapped_column(_TZ_DATETIME, nullable=True)
 
     customer: Mapped[LoyaltyCustomer] = relationship()
 
@@ -104,11 +113,11 @@ class WebhookEvent(Base):
     event_key: Mapped[str] = mapped_column(String(128), unique=True, index=True)
     event_type: Mapped[str] = mapped_column(String(100))
     raw_payload_masked: Mapped[str] = mapped_column(Text)
-    received_at: Mapped[datetime] = mapped_column(default=_now)
+    received_at: Mapped[datetime] = mapped_column(_TZ_DATETIME, default=_now)
     verify_status: Mapped[str] = mapped_column(String(20))  # verified | invalid
     process_status: Mapped[str] = mapped_column(
         String(20), default="received"
     )  # received|processed|needs_review|failed
     attempts: Mapped[int] = mapped_column(Integer, default=0)
-    next_attempt_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(_TZ_DATETIME, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
