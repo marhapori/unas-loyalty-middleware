@@ -11,6 +11,19 @@ import bcrypt
 TOKEN_PREFIX = "L1_"
 
 
+def safe_next_path(next_path: str | None) -> str:
+    """Only ever redirect to a same-site relative path, never an absolute/external
+    URL - a "next" value is user-influenced (query/form param), so an unguarded
+    redirect there would be an open-redirect vulnerability. Shared by the login
+    page and the /scan/{token} entry point (api/pages.py, api/auth_routes.py).
+    """
+    if not next_path:
+        return "/register"
+    if not next_path.startswith("/") or next_path.startswith("//") or "://" in next_path:
+        return "/register"
+    return next_path
+
+
 def generate_loyalty_token() -> str:
     """Cryptographically secure opaque token, >=128 bits of entropy.
 

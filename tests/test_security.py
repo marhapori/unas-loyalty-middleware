@@ -7,6 +7,7 @@ from loyalty_app.security import (
     hash_password,
     hash_token,
     mask_token,
+    safe_next_path,
     verify_password,
     verify_unas_webhook,
     webhook_event_key,
@@ -61,3 +62,24 @@ def test_webhook_event_key_is_deterministic():
     body = b"same body"
     assert webhook_event_key(body) == webhook_event_key(body)
     assert webhook_event_key(b"a") != webhook_event_key(b"b")
+
+
+def test_safe_next_path_accepts_relative_paths():
+    assert safe_next_path("/scan/L1_abc") == "/scan/L1_abc"
+
+
+def test_safe_next_path_rejects_external_urls():
+    assert safe_next_path("https://evil.example.com/phish") == "/register"
+
+
+def test_safe_next_path_rejects_protocol_relative_urls():
+    assert safe_next_path("//evil.example.com") == "/register"
+
+
+def test_safe_next_path_rejects_scheme_embedded_in_path():
+    assert safe_next_path("/redirect?to=https://evil.example.com") == "/register"
+
+
+def test_safe_next_path_defaults_on_missing_value():
+    assert safe_next_path(None) == "/register"
+    assert safe_next_path("") == "/register"

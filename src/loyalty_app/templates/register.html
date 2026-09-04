@@ -6,7 +6,7 @@
   <title>Kassza - Husegpont</title>
   <link rel="stylesheet" href="/static/styles.css?v=2" />
 </head>
-<body data-role="{{ role }}">
+<body data-role="{{ role }}"{% if initial_qr_payload %} data-initial-qr-payload="{{ initial_qr_payload }}"{% endif %}>
   <header class="topbar">
     <div><strong>Husegpont kassza</strong> <span id="offline-indicator" class="offline-badge" hidden>UNAS kapcsolat nem elerheto</span></div>
     <div>
@@ -74,6 +74,6 @@
     </div>
   </div>
 
-  <script src="/static/register.js?v=2"></script>
+  <script src="/static/register.js?v=3"></script>
 </body>
 </html>

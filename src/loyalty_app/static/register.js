@@ -323,8 +323,19 @@
     } catch (_err) {
       /* config preview is best-effort; server still enforces authoritative rules */
     }
-    focusScan();
     loadHistory();
+
+    const initialQrPayload = document.body.dataset.initialQrPayload;
+    if (initialQrPayload) {
+      // Arrived via /scan/<token> (seller scanned the customer's QR with their own
+      // phone camera) - resolve immediately instead of waiting for keyboard input.
+      // Strip the token out of the visible address bar/history afterwards so it
+      // doesn't linger there any longer than necessary.
+      window.history.replaceState({}, document.title, "/register");
+      await handleScan(initialQrPayload);
+    } else {
+      focusScan();
+    }
   }
 
   init();

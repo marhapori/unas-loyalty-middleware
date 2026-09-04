@@ -1,5 +1,32 @@
 # Eles telepitesi utmutato
 
+## Render.com (jelenleg hasznalt teszt/staging kornyezet)
+
+A repo tartalmaz egy `render.yaml` blueprint-et. Legegyszerubb ut:
+
+1. Render dashboard -> **New** -> **Blueprint** -> valaszd ki a GitHub repot
+   (`marhapori/unas-loyalty-middleware`).
+2. Render beolvassa a `render.yaml`-t, es kiirja, mely kornyezeti valtozokat kell
+   kezzel megadni (`sync: false` jeloltek): `UNAS_API_KEY`,
+   `UNAS_WEBHOOK_HMAC_SECRET`, `APP_BASE_URL`. Az elso kettot masold at a helyi
+   `.env` fajlbol.
+3. `APP_BASE_URL`-t elsore hagyd uresen vagy egy ideiglenes ertekkel - a
+   telepites utan Render megmutatja a tenyleges cimet (`https://<nev>.onrender.com`),
+   azt masold vissza ide, majd mentsd el ujra (ez ujra deployt indit).
+4. A `SESSION_SECRET` automatikusan generalodik (`generateValue: true`), nem kell
+   kezzel megadni.
+5. Deploy utan a tenyleges URL-lel:
+   - frissitsd a UNAS admin `customer_registration` automatizmus webhook URL-jet
+     `https://<nev>.onrender.com/webhooks/unas/customer-registration`-ra;
+   - frissitsd a UNAS sablon `main.cfg` `profile_loyalty_qr.payload_prefix`
+     erteket `https://<nev>.onrender.com/scan/`-ra.
+
+**Ismert korlat**: az ingyenes Render Web Service csomag lemeze **nem tartos** -
+inaktivitas utani "elalvasnal" vagy uj deploynal a SQLite-fajl (es benne minden
+kasszas fiok/tranzakcio) elveszhet. Ez jelenleg tudatosan elfogadott, ideiglenes
+allapot a tovabbi teszteleshez (lasd a beszelgetest) - eles hasznalat elott a
+Render Postgres hozzaadasa javasolt (lasd lent, "Atallas SQLite-rol Postgresre").
+
 ## Minimalis kovetelmeny
 
 - Egy szerver (VPS/gep), amin fut Python 3.12+.

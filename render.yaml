@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: unas-loyalty-middleware
+    env: python
+    plan: free
+    buildCommand: pip install -e .
+    startCommand: alembic upgrade head && uvicorn loyalty_app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DATABASE_URL
+        value: sqlite:///./data/loyalty.db
+      - key: UNAS_API_BASE_URL
+        value: https://api.unas.eu/shop
+      - key: UNAS_API_KEY
+        sync: false
+      - key: UNAS_LOYALTY_PARAM_ID
+        value: "6590861"
+      - key: UNAS_WEBHOOK_HMAC_SECRET
+        sync: false
+      - key: UNAS_MAX_REQUESTS_PER_SECOND
+        value: "5"
+      - key: UNAS_REQUEST_TIMEOUT_SECONDS
+        value: "30"
+      - key: LOYALTY_QR_PREFIX
+        value: "unas-loyalty:v1:"
+      - key: LOYALTY_TOKEN_MAX_LENGTH
+        value: "64"
+      - key: LOYALTY_POINTS_RULE_MODE
+        value: per_currency_unit
+      # Ideiglenes teszterték - csere a valodi uzleti dontesre eles elott!
+      - key: LOYALTY_POINTS_PER_CURRENCY_UNIT
+        value: "0.01"
+      - key: LOYALTY_POINTS_ROUNDING
+        value: floor
+      - key: LOYALTY_REDEMPTION_VALUE_PER_POINT
+        value: "1"
+      - key: LOYALTY_REDEMPTION_MIN_POINTS
+        value: "1"
+      - key: LOYALTY_REDEMPTION_MAX_POINTS_PER_TX
+        value: "5000"
+      - key: SESSION_SECRET
+        generateValue: true
+      # Fill in AFTER the service is created with the real https://<name>.onrender.com
+      # URL Render assigns - used for the session cookie Secure flag and CSRF checks.
+      - key: APP_BASE_URL
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO

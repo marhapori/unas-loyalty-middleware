@@ -1,4 +1,4 @@
-from loyalty_app.loyalty.qr import extract_token
+from loyalty_app.loyalty.qr import extract_token, validate_token_shape
 from loyalty_app.security import generate_loyalty_token
 
 PREFIX = "unas-loyalty:v1:"
@@ -43,3 +43,57 @@ def test_rejects_invalid_characters():
 def test_rejects_none_and_empty():
     assert extract_token("", prefix=PREFIX, max_token_length=64) is None
     assert extract_token(None, prefix=PREFIX, max_token_length=64) is None
+
+
+# --- URL-shaped payload (seller scans the customer's QR with their own phone,
+# which now encodes a URL - see docs/ARCHITECTURE_DECISIONS.md) -----------------
+
+
+def test_extracts_token_from_scan_url():
+    token = generate_loyalty_token()
+    url = f"https://example.com/scan/{token}"
+    assert extract_token(url, prefix=PREFIX, max_token_length=64) == token
+
+
+def test_extracts_token_from_scan_url_with_trailing_slash():
+    token = generate_loyalty_token()
+    url = f"https://example.com/scan/{token}/"
+    assert extract_token(url, prefix=PREFIX, max_token_length=64) == token
+
+
+def test_extracts_token_from_scan_url_with_query_string():
+    token = generate_loyalty_token()
+    url = f"https://example.com/scan/{token}?utm_source=qr"
+    assert extract_token(url, prefix=PREFIX, max_token_length=64) == token
+
+
+def test_rejects_url_with_invalid_token_segment():
+    url = "https://example.com/scan/not-a-real-token"
+    assert extract_token(url, prefix=PREFIX, max_token_length=64) is None
+
+
+def test_rejects_url_without_path():
+    assert extract_token("https://example.com", prefix=PREFIX, max_token_length=64) is None
+
+
+def test_rejects_plain_scheme_without_recognizable_envelope():
+    # ftp:// etc. must not be treated as a URL envelope
+    token = generate_loyalty_token()
+    assert extract_token(f"ftp://example.com/scan/{token}", prefix=PREFIX, max_token_length=64) is None
+
+
+# --- validate_token_shape (used directly by the /scan/{token} route) -----------
+
+
+def test_validate_token_shape_accepts_valid_token():
+    token = generate_loyalty_token()
+    assert validate_token_shape(token, max_token_length=64) == token
+
+
+def test_validate_token_shape_rejects_missing_prefix():
+    assert validate_token_shape("not-our-format", max_token_length=64) is None
+
+
+def test_validate_token_shape_rejects_none_and_empty():
+    assert validate_token_shape(None, max_token_length=64) is None
+    assert validate_token_shape("", max_token_length=64) is None
