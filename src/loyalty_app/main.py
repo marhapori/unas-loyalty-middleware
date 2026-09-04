@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.staticfiles import StaticFiles
 
-from loyalty_app.api import auth_routes, health_routes, loyalty_routes, pages, scan_routes, webhook_routes
+from loyalty_app.api import admin_routes, auth_routes, health_routes, loyalty_routes, pages, scan_routes, webhook_routes
 from loyalty_app.config import get_settings
 from loyalty_app.db import SessionLocal
 from loyalty_app.security import RedactingFilter
@@ -66,6 +66,7 @@ def create_app() -> FastAPI:
     app.include_router(loyalty_routes.router)
     app.include_router(webhook_routes.router)
     app.include_router(health_routes.router)
+    app.include_router(admin_routes.router)
 
     return app
 

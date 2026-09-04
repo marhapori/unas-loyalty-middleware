@@ -33,6 +33,12 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
 
+    # Empty (default) disables /api/admin/bootstrap entirely (fail-closed) - only
+    # set this when a hosting platform gives no other way to run the seed-store /
+    # create-user CLI commands against the deployed database (e.g. Render's free
+    # tier, which has no Shell access). See docs/DEPLOYMENT.md.
+    admin_bootstrap_token: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

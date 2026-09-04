@@ -47,3 +47,8 @@ services:
         sync: false
       - key: LOG_LEVEL
         value: INFO
+      # Only needed on plans without Shell access (e.g. Render free tier), to
+      # bootstrap the first store/admin user via POST /api/admin/bootstrap - see
+      # docs/DEPLOYMENT.md. Unset again once initial setup is done.
+      - key: ADMIN_BOOTSTRAP_TOKEN
+        sync: false

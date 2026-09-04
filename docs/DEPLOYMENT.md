@@ -2,30 +2,50 @@
 
 ## Render.com (jelenleg hasznalt teszt/staging kornyezet)
 
-A repo tartalmaz egy `render.yaml` blueprint-et. Legegyszerubb ut:
+A repo tartalmaz egy `render.yaml` blueprint-et, de a Render "Blueprint" opcioja
+nem minden fioktipusnal/regioban erheto el - ha nalad nincs, a "New Web Service"
+kezi utat kell hasznalni, ugyanazokkal az ertekekkel:
 
-1. Render dashboard -> **New** -> **Blueprint** -> valaszd ki a GitHub repot
-   (`marhapori/unas-loyalty-middleware`).
-2. Render beolvassa a `render.yaml`-t, es kiirja, mely kornyezeti valtozokat kell
-   kezzel megadni (`sync: false` jeloltek): `UNAS_API_KEY`,
-   `UNAS_WEBHOOK_HMAC_SECRET`, `APP_BASE_URL`. Az elso kettot masold at a helyi
-   `.env` fajlbol.
-3. `APP_BASE_URL`-t elsore hagyd uresen vagy egy ideiglenes ertekkel - a
-   telepites utan Render megmutatja a tenyleges cimet (`https://<nev>.onrender.com`),
-   azt masold vissza ide, majd mentsd el ujra (ez ujra deployt indit).
-4. A `SESSION_SECRET` automatikusan generalodik (`generateValue: true`), nem kell
-   kezzel megadni.
-5. Deploy utan a tenyleges URL-lel:
-   - frissitsd a UNAS admin `customer_registration` automatizmus webhook URL-jet
-     `https://<nev>.onrender.com/webhooks/unas/customer-registration`-ra;
-   - frissitsd a UNAS sablon `main.cfg` `profile_loyalty_qr.payload_prefix`
-     erteket `https://<nev>.onrender.com/scan/`-ra.
+- **Git Provider** fulon (nem "Public Git Repository", mert a repo privat) kosd
+  ossze a GitHub-fiokot es valaszd ki a repot.
+- Build Command: `pip install -e .`
+- Start Command: `alembic upgrade head && uvicorn loyalty_app.main:app --host 0.0.0.0 --port $PORT`
+- Kornyezeti valtozok: lasd a `render.yaml` fajl `envVars` listajat - minden
+  `sync: false` jelolt erteket (`UNAS_API_KEY`, `UNAS_WEBHOOK_HMAC_SECRET`,
+  `APP_BASE_URL`, `ADMIN_BOOTSTRAP_TOKEN`) kezzel kell megadni, a tobbit
+  masold at onnan.
+- `APP_BASE_URL`-t a deploy UTAN, a tenyleges `https://<nev>.onrender.com`
+  cimmel toltsd ki, majd mentsd el ujra (ez ujra deployt indit).
+
+### Elso bolt/admin felhasznalo letrehozasa (Shell nelkul)
+
+Az ingyenes Render Web Service csomagnak **nincs Shell hozzaferese** (fizetos
+funkcio), igy a `python -m loyalty_app.cli seed-store` / `create-user`
+parancsokat nem lehet kozvetlenul futtatni a futo peldanyon. Ehelyett:
+
+1. Allitsd be az `ADMIN_BOOTSTRAP_TOKEN` kornyezeti valtozot Render-en egy eros,
+   veletlen ertekre.
+2. Hivd meg a bootstrap vegpontot (pl. helyi gepedrol, curl-lal):
+
+```bash
+curl -X POST https://<nev>.onrender.com/api/admin/bootstrap \
+  -H "Content-Type: application/json" \
+  -H "X-Bootstrap-Token: <az ADMIN_BOOTSTRAP_TOKEN erteke>" \
+  -d '{"storeName":"Fo bolt","storeCode":"BOLT01","username":"kassza1","password":"eros_jelszo_ide","role":"admin"}'
+```
+
+3. A vegpont idempotens - ha a bolt/felhasznalo mar letezik, nem hoz letre
+   masodpeldanyt (`storeCreated`/`userCreated`: `false` a valaszban).
+4. **Utana toroljed/uresitsd ki** az `ADMIN_BOOTSTRAP_TOKEN` erteket Render-en -
+   ures ertekkel a vegpont mindig `404`-et ad vissza (alapertelmezetten
+   letiltva), igy nem marad nyitva egy admin-letrehozo vegpont a neten.
 
 **Ismert korlat**: az ingyenes Render Web Service csomag lemeze **nem tartos** -
 inaktivitas utani "elalvasnal" vagy uj deploynal a SQLite-fajl (es benne minden
-kasszas fiok/tranzakcio) elveszhet. Ez jelenleg tudatosan elfogadott, ideiglenes
-allapot a tovabbi teszteleshez (lasd a beszelgetest) - eles hasznalat elott a
-Render Postgres hozzaadasa javasolt (lasd lent, "Atallas SQLite-rol Postgresre").
+kasszas fiok/tranzakcio) elveszhet, es ilyenkor a fenti bootstrap-lepest ujra
+el kell vegezni. Ez jelenleg tudatosan elfogadott, ideiglenes allapot a
+tovabbi teszteleshez - eles hasznalat elott a Render Postgres hozzaadasa
+javasolt (lasd lent, "Atallas SQLite-rol Postgresre").
 
 ## Minimalis kovetelmeny
 

@@ -31,3 +31,4 @@ class SlidingWindowRateLimiter:
 scan_limiter = SlidingWindowRateLimiter(max_requests=30, window_seconds=60)
 login_limiter = SlidingWindowRateLimiter(max_requests=10, window_seconds=60)
 webhook_limiter = SlidingWindowRateLimiter(max_requests=120, window_seconds=60)
+admin_bootstrap_limiter = SlidingWindowRateLimiter(max_requests=5, window_seconds=60)

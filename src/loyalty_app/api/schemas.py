@@ -53,6 +53,19 @@ class LoyaltyConfigResponse(BaseModel):
     redemptionMaxPointsPerTx: int
 
 
+class AdminBootstrapRequest(BaseModel):
+    storeName: str = Field(min_length=1, max_length=200)
+    storeCode: str = Field(min_length=1, max_length=50)
+    username: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=8, max_length=200)
+    role: str = Field(default="admin", pattern="^(admin|cashier)$")
+
+
+class AdminBootstrapResponse(BaseModel):
+    storeCreated: bool
+    userCreated: bool
+
+
 class TransactionListItem(BaseModel):
     id: str
     type: str
