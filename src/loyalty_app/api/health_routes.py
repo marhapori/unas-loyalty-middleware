@@ -23,10 +23,10 @@ def ready(session: Session = Depends(get_db)) -> dict:
 
 @router.get("/outbound-ip")
 async def outbound_ip() -> dict:
-    """Temporary diagnostic: reveals this instance's outbound IP address, for
-    reporting to UNAS support while investigating a suspected IP-based block
-    (see docs/KNOWN_LIMITATIONS.md, 2026-09-04/05). No secrets involved - safe
-    to leave public. Remove once the connectivity issue is resolved."""
+    """Reveals this instance's outbound IP address - useful when reporting a
+    suspected IP-based block to UNAS support (see docs/KNOWN_LIMITATIONS.md),
+    or when a hosting migration needs the new IP for a whitelist request. No
+    secrets involved."""
     async with httpx.AsyncClient(timeout=10.0) as client:
         response = await client.get("https://api.ipify.org?format=json")
         return response.json()

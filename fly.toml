@@ -1,0 +1,25 @@
+app = "unas-loyalty-middleware"
+primary_region = "ams"
+
+[build]
+
+[env]
+  PORT = "8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+[deploy]
+  release_command = "alembic upgrade head"
+
+[processes]
+  app = "uvicorn loyalty_app.main:app --host 0.0.0.0 --port 8000"

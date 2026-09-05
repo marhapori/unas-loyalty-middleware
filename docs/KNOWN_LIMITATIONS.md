@@ -1,6 +1,24 @@
 # Ismert korlatok es eles indulas elotti teendok
 
-## NYITOTT: Render -> UNAS kapcsolati blokk (2026-09-04, meg nem megoldva)
+## MEGOLDVA: Render -> UNAS kapcsolati blokk (2026-09-04/05)
+
+**Frissites (2026-09-05)**: 24+ ora varakozas utan a blokk tovabbra is
+fennallt a Render-en (tehat nem az 1 oras login-limit tiltas volt), es a
+sajat gepunkrol tovabbra is mukodott a UNAS-kapcsolat - ez megerositette,
+hogy IP/szolgaltato-specifikus blokkrol van szo. **Athelyeztuk a webalkalmazast
+Fly.io-ra** (lasd [DEPLOYMENT.md](DEPLOYMENT.md), "Fly.io" fejezet) - onnan
+azonnal, hibatlanul (0.5 masodperc alatt) mukodott ugyanaz a UNAS-hivas,
+ugyanazzal az API-kulccsal es adatbazissal. Ez vegleg kizarja, hogy a kodunk,
+az API-kulcsunk vagy a UNAS altalanos elerhetosege lett volna a problema -
+kifejezetten a Render (Frankfurt regios) kiszolgaloi IP-tartomanya volt
+erintett.
+
+**UNAS ugyfelszolgalat is megkeresve** a Render IP-cim (74.220.51.139)
+blokkolasaval kapcsolatban - valasz meg nem erkezett. Ha felszabadul a blokk,
+a Render visszaallithato lenne (lasd DEPLOYMENT.md), de nincs surgeto ok ra,
+mivel a Fly.io stabilan mukodik.
+
+Eredeti hibaleiras (tortenei referenciakent megtartva):
 
 Aznap kesobb, miutan a fenti datetime-hibat javitottuk, kiderult egy sulyosabb
 gond: **a Render szerverekrol induló hivasok a UNAS API fele nem kapnak

@@ -1,10 +1,66 @@
 # Eles telepitesi utmutato
 
-## Render.com (jelenleg hasznalt teszt/staging kornyezet)
+## Fly.io (jelenleg hasznalt teszt/staging kornyezet)
 
-A repo tartalmaz egy `render.yaml` blueprint-et, de a Render "Blueprint" opcioja
-nem minden fioktipusnal/regioban erheto el - ha nalad nincs, a "New Web Service"
-kezi utat kell hasznalni, ugyanazokkal az ertekekkel:
+**Miert Fly.io es nem Render**: 2026-09-04/05-en a Render.com (Frankfurt regio)
+szerverei tartosan (24+ orat is meghaladoan) nem tudtak elerni a UNAS API-t
+(`https://api.unas.eu/shop/login` idotullepessel elszallt minden alkalommal),
+miközben ugyanez a hivas mindvegig mukodott sajat gepunkrol. Fly.io-ra atallva
+a kapcsolat azonnal, hibatlanul mukodott (lasd
+[docs/KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md)). A Render-es beallitas
+lepesei a fejezet vegen, "Render (korabban kiprobalva, jelenleg nem
+hasznalt)" alatt maradtak dokumentalva, ha a UNAS-oldali blokk kesobb
+feloldodna es visszavaltananatok.
+
+A repo tartalmaz egy `Dockerfile`-t es `fly.toml`-t. A projekt Postgres
+adatbazisa jelenleg a korabban letrehozott **Render Postgres** peldany
+(kulon, tartos szolgaltatas, fuggetlen a webszolgaltatastol - ez tovabbra is
+hasznalhato, akarhol is fut maga a webalkalmazas).
+
+### Telepites lepesei
+
+1. Toltsd le a `flyctl` CLI-t: `iwr https://fly.io/install.ps1 -useb | iex`
+   (Windows PowerShell) vagy `curl -L https://fly.io/install.sh | sh` (Linux/Mac).
+2. Sajat, interaktiv terminalodban jelentkezz be: `fly auth login` (bongeszot
+   nyit). Ha a fiokod SSO-t igenylo szervezethez tartozik, az `Access Tokens`
+   oldal helyett hasznald: `fly tokens org <szervezet-nev>` - ez egy
+   `FLY_API_TOKEN` kornyezeti valtozokent hasznalhato tokent ad.
+3. App letrehozasa: `fly apps create <app-nev> --org <szervezet-nev>`
+4. Titkos ertekek beallitasa (`fly secrets set KEY=ertek ... --app <app-nev>`) -
+   ugyanazok a valtozok kellenek, mint a `.env.example`-ben felsoroltak
+   (`DATABASE_URL`, `UNAS_API_KEY`, `UNAS_WEBHOOK_HMAC_SECRET`,
+   `SESSION_SECRET`, `APP_BASE_URL=https://<app-nev>.fly.dev`, uzleti
+   szabalyok stb.) - `ADMIN_BOOTSTRAP_TOKEN`-ra itt nincs sziikseg, lasd lent.
+5. Deploy: `fly deploy --app <app-nev>` - ez megepiti a Docker image-et, majd
+   a `fly.toml`-ban megadott `release_command` (`alembic upgrade head`)
+   automatikusan lefuttatja a migraciokat minden deploy elott.
+6. Elso bolt/admin felhasznalo: **Fly.io-n van kozvetlen konzol-hozzaferes**
+   (nincs Render-szeru fizetos-Shell korlat), tehat egyszeruen:
+   `fly ssh console --app <app-nev>`, majd a konzolban
+   `python -m loyalty_app.cli seed-store ...` es `create-user ...` a
+   README-ben leirtak szerint. (A `/api/admin/bootstrap` vegpont csak akkor
+   kell, ha a valasztott platformnak tenyleg nincs semmilyen kozvetlen
+   hozzaferese - lasd a Render-fejezetben.)
+
+### Ismert sajatossagok
+
+- `fly.toml`-ban `auto_stop_machines = "stop"` es `min_machines_running = 0`
+  van beallitva (koltseghatekony teszteleshez) - ez azt jelenti, hogy
+  inaktivitas utan a gep leall, es az elso bejovo keres ujrainditja (nehany
+  masodperces "cold start" kesleltetessel, hasonloan a Render ingyenes
+  csomagjahoz). **Eles hasznalat elott** allitsd `min_machines_running = 1`-re
+  a `[http_service]` blokkban, hogy a hattérworker (webhook-feldolgozas)
+  folyamatosan fusson, ne csak bejovo HTTP-keresre ebredjen fel.
+- `primary_region = "ams"` (Amsterdam) van beallitva - szandekosan nem
+  Frankfurt, hogy elkeruljuk, ha a UNAS-oldali blokk regio-specifikus lett
+  volna (bar valoszinubb, hogy a Render szolgaltato/IP-tartomanya volt az ok).
+
+## Render (korabban kiprobalva, jelenleg nem hasznalt)
+
+A repo tartalmaz egy `render.yaml` blueprint-et is, ha a UNAS-oldali IP-blokk
+kesobb feloldodna es visszavaltananatok Render-re. A Render "Blueprint"
+opcioja nem minden fioktipusnal/regioban erheto el - ha nalad nincs, a "New
+Web Service" kezi utat kell hasznalni, ugyanazokkal az ertekekkel:
 
 - **Git Provider** fulon (nem "Public Git Repository", mert a repo privat) kosd
   ossze a GitHub-fiokot es valaszd ki a repot.
