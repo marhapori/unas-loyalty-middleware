@@ -12,7 +12,8 @@ UNAS API reszletek: [docs/UNAS_API_gyakorlati_utmutato.md](docs/UNAS_API_gyakorl
 Tovabbi dokumentumok:
 
 - [docs/UNAS_SETUP.md](docs/UNAS_SETUP.md) - UNAS admin/API/webhook beallitas
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - eles telepites
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - eles telepites (jelenleg: Fly.io)
+- [docs/VPS_ATALLAS.md](docs/VPS_ATALLAS.md) - a rendszer mukodesenek attekintese, es lepesenkenti utmutato sajat VPS-re koltozeshez
 - [docs/CASHIER_GUIDE.md](docs/CASHIER_GUIDE.md) - kasszas hasznalati utmutato
 - [docs/ARCHITECTURE_DECISIONS.md](docs/ARCHITECTURE_DECISIONS.md) - tervezesi dontesek es indoklasuk
 - [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) - ismert korlatok, mit kell meg ellenorizni eles inditas elott
