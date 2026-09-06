@@ -11,6 +11,7 @@ UNAS API reszletek: [docs/UNAS_API_gyakorlati_utmutato.md](docs/UNAS_API_gyakorl
 
 Tovabbi dokumentumok:
 
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - fejlesztoi utmutato: uj gepen inditas, tipikus modositasi feladatok
 - [docs/UNAS_SETUP.md](docs/UNAS_SETUP.md) - UNAS admin/API/webhook beallitas
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - eles telepites (jelenleg: Fly.io)
 - [docs/VPS_ATALLAS.md](docs/VPS_ATALLAS.md) - a rendszer mukodesenek attekintese, es lepesenkenti utmutato sajat VPS-re koltozeshez
