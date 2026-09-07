@@ -34,7 +34,11 @@ Reszletes doksik (mindig ezeket olvasd, mielott valtoztatsz):
   Render szerverei tartosan nem ertek el a UNAS API-t (lasd
   KNOWN_LIMITATIONS.md).
 - **Adatbazis**: Render Postgres (kulon, tartos szolgaltatas, nem fugg a
-  webalkalmazas hostingjatol).
+  webalkalmazas hostingjatol - a Fly.io elhagyasa onmagaban NEM erinti). Ha
+  majd VPS-re koltoztok es ott sajat Postgres-t vezettek be (nem kotelezo,
+  de ajanlott, hogy ne fuggjetek kulso szolgaltatotol), a meglevo adatokat
+  `pg_dump`/`pg_restore`-ral at KELL masolni - lasd VPS_ATALLAS.md 2.3, ahol
+  mar konkret, futtathato parancsok is vannak hozza.
 - **NYITOTT**: egyedi domain (`huseg.trendidivat.hu` - VIGYAZAT, korabban
   tevesen `hutseg` volt dokumentalva egy elirassal, mar javitva) bevezetese
   folyamatban a Fly.io-n, hogy a telefonos QR-beolvasas linkkent ismerje fel

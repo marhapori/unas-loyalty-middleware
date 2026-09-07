@@ -163,9 +163,50 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE loyalty TO loyaltyapp
 ```
 
 Ha B) mellett döntötök, a **meglévő adatokat át kell másolni** a Render
-Postgres-ből az újba (`pg_dump` + `pg_restore`, vagy `pgloader`) - ez a
-projekt nem tartalmaz automatikus migrációs szkriptet erre, külön lépésként
-kell elvégezni, mielőtt éles forgalmat engedtek az új szerverre.
+Postgres-ből az újba - ez a projekt nem tartalmaz automatikus migrációs
+szkriptet erre, külön lépésként kell elvégezni, mielőtt éles forgalmat
+engedtek az új szerverre. A `pg_dump`/`pg_restore` erre a méretre
+(néhány tábla, valószínűleg néhány ezer sor) bőven elég, `pgloader` nem
+szükséges:
+
+```bash
+# 1. Dump keszitese a REGI (Render) adatbazisrol - futtathato akarhonnan,
+#    ahonnan elered a Render External Database URL-t (pl. sajat gepedrol
+#    vagy magarol az uj VPS-rol is)
+pg_dump --format=custom --no-owner --no-acl \
+  "postgresql://<user>:<jelszo>@<render-host>/<dbnev>" \
+  -f loyalty_dump.custom
+
+# 2. Fajl atmasolasa az uj VPS-re, ha nem ott keszult
+scp loyalty_dump.custom felhasznalo@uj-vps:/tmp/
+
+# 3. Visszatoltes az UJ, sajat VPS-Postgresbe (a fent letrehozott ures
+#    "loyalty" adatbazisba - a tablakat MAGA a restore hozza letre, ELOTTE
+#    NE futtass alembic upgrade head-et erre a DB-re, mert ures tablakat
+#    hozna letre, amikkel a restore utkozne)
+pg_restore --no-owner --no-acl --clean --if-exists \
+  --dbname="postgresql://loyaltyapp:jelszo@localhost/loyalty" \
+  /tmp/loyalty_dump.custom
+```
+
+Ellenorzes visszatoltes utan (sorszamok egyezzenek a regi es az uj DB-ben):
+
+```bash
+psql "postgresql://loyaltyapp:jelszo@localhost/loyalty" -c \
+  "SELECT count(*) FROM loyalty_customers; SELECT count(*) FROM loyalty_transactions;"
+```
+
+Ha ez megtortent es egyezik, `alembic upgrade head` mar biztonsagosan
+lefuttathato az uj DB-n is (csak azert kell, hogy az Alembic sajat
+verzio-tablaja is szinkronban legyen - ha a dump idejen a regi DB mar a
+legfrissebb migracion volt, ez nem valtoztat semmit a tablakon).
+
+**Fontos**: a dump es a tenyleges atallas (uj `.env` elesitese) kozott
+eltelt idoben a regi (Render/Fly-os) rendszeren keletkezo UJ
+tranzakciok/regisztraciok NEM keriilnek at a dump-ba - ezert ezt a lepest
+kozvetlenul a vaglaso atallas elott (rovid karbantartasi ablakban) vegezzed,
+vagy allitsd le ideiglenesen a regi rendszert (pl. `fly scale count 0`) a
+dump idejere.
 
 ### 2.4. Környezeti változók (`.env`)
 
