@@ -235,14 +235,14 @@ sudo -u loyaltyapp /opt/loyalty-app/.venv/bin/python -m loyalty_app.cli create-u
 
 ### 2.6. Domain, TLS, reverse proxy
 
-Ha a jelenlegi `hutseg.trendidivat.hu` domaint viszitek tovább (ajánlott, ne
+Ha a jelenlegi `huseg.trendidivat.hu` domaint viszitek tovább (ajánlott, ne
 kelljen megint a UNAS-oldali beállításokat módosítani), csak a DNS A/AAAA
 rekordját kell átírni az ÚJ szerver IP-címére. Ha új domaint választotok,
 frissíteni kell mindent, ami a domainre hivatkozik (lásd 2.7).
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d hutseg.trendidivat.hu
+sudo certbot --nginx -d huseg.trendidivat.hu
 ```
 
 Nginx reverse proxy (`/etc/nginx/sites-available/loyalty-app`):
@@ -250,7 +250,7 @@ Nginx reverse proxy (`/etc/nginx/sites-available/loyalty-app`):
 ```nginx
 server {
     listen 443 ssl;
-    server_name hutseg.trendidivat.hu;
+    server_name huseg.trendidivat.hu;
     # a certbot automatikusan kitolti a ssl_certificate sorokat
 
     location / {
