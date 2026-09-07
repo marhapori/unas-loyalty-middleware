@@ -68,6 +68,7 @@ def loyalty_config(
         redemptionValuePerPoint=settings.loyalty_redemption_value_per_point,
         redemptionMinPoints=settings.loyalty_redemption_min_points,
         redemptionMaxPointsPerTx=settings.loyalty_redemption_max_points_per_tx,
+        redemptionMaxPercentOfOrder=settings.loyalty_redemption_max_percent_of_order,
     )
 
 
@@ -113,6 +114,7 @@ async def redeem(
             qr_payload=body.qrPayload,
             external_receipt_id=body.externalReceiptId,
             points_to_redeem=body.pointsToRedeem,
+            purchase_amount_gross=body.purchaseAmountGross,
             idempotency_key=body.idempotencyKey,
             store_id=user.store_id,
             register_id=None,

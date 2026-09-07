@@ -50,6 +50,7 @@ async def test_reverse_redeem_gives_points_back(db_session, settings):
     redeem_result = await service.redeem(
         db_session, client, settings,
         qr_payload=qr_payload, external_receipt_id="R-2", points_to_redeem=40,
+        purchase_amount_gross=10000,
         idempotency_key="R-2:redeem", store_id=None, register_id=None, cashier_user_id=None,
     )
     assert redeem_result.balance_after == 60

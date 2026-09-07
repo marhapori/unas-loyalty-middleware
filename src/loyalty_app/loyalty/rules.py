@@ -42,7 +42,9 @@ def _round_points(value: float, mode: str) -> int:
     return math.floor(value)
 
 
-def validate_redeem_request(points_to_redeem: int, current_balance: int, settings: Settings) -> None:
+def validate_redeem_request(
+    points_to_redeem: int, current_balance: int, settings: Settings, *, purchase_amount_gross: int
+) -> None:
     if points_to_redeem <= 0:
         raise RuleViolation("invalid_points", "A bevaltando pontnak pozitivnak kell lennie")
     if points_to_redeem < settings.loyalty_redemption_min_points:
@@ -56,6 +58,15 @@ def validate_redeem_request(points_to_redeem: int, current_balance: int, setting
             "above_maximum",
             f"A bevaltas maximum {max_per_tx} pont lehet tranzakciononkent",
         )
+    max_percent = settings.loyalty_redemption_max_percent_of_order
+    if max_percent:
+        max_value = purchase_amount_gross * max_percent
+        if redemption_value(points_to_redeem, settings) > max_value:
+            raise RuleViolation(
+                "above_order_percent_limit",
+                f"A bevaltott pontok erteke nem haladhatja meg a rendeles vegosszegenek "
+                f"{max_percent * 100:.0f}%-at",
+            )
     if points_to_redeem > current_balance:
         raise RuleViolation("insufficient_balance", "Nincs eleg pont a bevaltashoz")
 

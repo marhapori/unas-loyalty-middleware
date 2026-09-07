@@ -29,6 +29,7 @@ class RedeemRequest(BaseModel):
     qrPayload: str = Field(min_length=1, max_length=300)
     externalReceiptId: str = Field(min_length=1, max_length=200)
     pointsToRedeem: int = Field(gt=0)
+    purchaseAmountGross: int = Field(ge=0)
     idempotencyKey: str = Field(min_length=1, max_length=255)
 
 
@@ -51,6 +52,7 @@ class LoyaltyConfigResponse(BaseModel):
     redemptionValuePerPoint: float
     redemptionMinPoints: int
     redemptionMaxPointsPerTx: int
+    redemptionMaxPercentOfOrder: float
 
 
 class AdminBootstrapRequest(BaseModel):

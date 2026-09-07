@@ -14,6 +14,7 @@
   const earnReceipt = document.getElementById("earn-receipt");
   const earnButton = document.getElementById("earn-button");
 
+  const redeemAmount = document.getElementById("redeem-amount");
   const redeemPoints = document.getElementById("redeem-points");
   const redeemPreview = document.getElementById("redeem-preview");
   const redeemReceipt = document.getElementById("redeem-receipt");
@@ -85,6 +86,7 @@
     currentBalance = null;
     customerPanel.hidden = true;
     earnAmount.value = "";
+    redeemAmount.value = "";
     redeemPoints.value = "";
     earnPreview.textContent = "";
     redeemPreview.textContent = "";
@@ -106,15 +108,32 @@
     earnPreview.textContent = amount ? "Varhato jovairas: kb. " + points + " pont" : "";
   });
 
-  redeemPoints.addEventListener("input", () => {
+  function maxRedeemableValue(purchaseAmount) {
+    if (!config || !config.redemptionMaxPercentOfOrder) return null; // nincs %-os korlat
+    if (!purchaseAmount || purchaseAmount < 0) return 0;
+    return purchaseAmount * config.redemptionMaxPercentOfOrder;
+  }
+
+  function updateRedeemPreview() {
     const points = parseInt(redeemPoints.value, 10);
+    const amount = parseFloat(redeemAmount.value);
     if (!points || !config) {
       redeemPreview.textContent = "";
       return;
     }
     const value = points * config.redemptionValuePerPoint;
-    redeemPreview.textContent = "Ertek: kb. " + value + " Ft";
-  });
+    const cap = maxRedeemableValue(amount);
+    if (cap !== null && value > cap) {
+      redeemPreview.textContent =
+        "Ertek: kb. " + value + " Ft - TULLEPI a rendeles " +
+        (config.redemptionMaxPercentOfOrder * 100).toFixed(0) + "%-os korlatjat (max " + cap + " Ft)";
+    } else {
+      redeemPreview.textContent = "Ertek: kb. " + value + " Ft";
+    }
+  }
+
+  redeemPoints.addEventListener("input", updateRedeemPreview);
+  redeemAmount.addEventListener("input", updateRedeemPreview);
 
   async function handleScan(rawPayload) {
     const payload = (rawPayload || "").trim();
@@ -219,12 +238,26 @@
   redeemButton.addEventListener("click", async () => {
     if (!currentQrPayload) return;
     const points = parseInt(redeemPoints.value, 10);
+    const amount = parseInt(redeemAmount.value, 10);
+    if (!amount || amount <= 0) {
+      showStatus("Add meg a vasarlas vegosszeget", "error");
+      return;
+    }
     if (!points || points <= 0) {
       showStatus("Add meg a bevaltando pontot", "error");
       return;
     }
     if (currentBalance !== null && points > currentBalance) {
       showStatus("Nincs eleg pont a bevaltashoz", "error");
+      return;
+    }
+    const cap = maxRedeemableValue(amount);
+    if (cap !== null && points * config.redemptionValuePerPoint > cap) {
+      showStatus(
+        "A bevaltas erteke nem haladhatja meg a rendeles " +
+          (config.redemptionMaxPercentOfOrder * 100).toFixed(0) + "%-at (max " + cap + " Ft)",
+        "error"
+      );
       return;
     }
     const ok = await openConfirm(
@@ -243,12 +276,14 @@
           qrPayload: currentQrPayload,
           externalReceiptId: receipt,
           pointsToRedeem: points,
+          purchaseAmountGross: amount,
           idempotencyKey: receipt + ":redeem:" + randomKey(),
         }),
       });
       currentBalance = parseInt(result.balanceAfter, 10);
       customerBalance.textContent = result.balanceAfter;
       showStatus("Siker: uj egyenleg " + result.balanceAfter + " pont", "success");
+      redeemAmount.value = "";
       redeemPoints.value = "";
       redeemPreview.textContent = "";
       loadHistory();

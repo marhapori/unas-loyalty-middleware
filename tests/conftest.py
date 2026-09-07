@@ -11,6 +11,7 @@ os.environ.setdefault("LOYALTY_POINTS_PER_CURRENCY_UNIT", "0.01")
 os.environ.setdefault("LOYALTY_REDEMPTION_VALUE_PER_POINT", "1")
 os.environ.setdefault("LOYALTY_REDEMPTION_MIN_POINTS", "10")
 os.environ.setdefault("LOYALTY_REDEMPTION_MAX_POINTS_PER_TX", "5000")
+os.environ.setdefault("LOYALTY_REDEMPTION_MAX_PERCENT_OF_ORDER", "0")
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 if str(SRC) not in sys.path:
@@ -36,6 +37,7 @@ def settings() -> Settings:
         loyalty_redemption_value_per_point=1.0,
         loyalty_redemption_min_points=10,
         loyalty_redemption_max_points_per_tx=5000,
+        loyalty_redemption_max_percent_of_order=0.0,
     )
 
 

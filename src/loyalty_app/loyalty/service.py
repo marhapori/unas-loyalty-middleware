@@ -304,6 +304,7 @@ async def redeem(
     qr_payload: str,
     external_receipt_id: str,
     points_to_redeem: int,
+    purchase_amount_gross: int,
     idempotency_key: str,
     store_id: str | None,
     register_id: str | None,
@@ -328,7 +329,9 @@ async def redeem(
         if remote is None:
             raise CustomerNotFound()
         current_balance = int(remote.points_balance or 0)
-        rules.validate_redeem_request(points_to_redeem, current_balance, settings)
+        rules.validate_redeem_request(
+            points_to_redeem, current_balance, settings, purchase_amount_gross=purchase_amount_gross
+        )
 
         return await _apply_balance_change(
             session,

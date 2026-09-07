@@ -41,11 +41,15 @@ Reszletes doksik (mindig ezeket olvasd, mielott valtoztatsz):
   mar konkret, futtathato parancsok is vannak hozza.
 - **NYITOTT**: egyedi domain (`huseg.trendidivat.hu` - VIGYAZAT, korabban
   tevesen `hutseg` volt dokumentalva egy elirassal, mar javitva) bevezetese
-  folyamatban a Fly.io-n, hogy a telefonos QR-beolvasas linkkent ismerje fel
-  az URL-t. Tanusitvany kesz es hitelesitve, `APP_BASE_URL` mar atallitva -
-  a UNAS webhook URL es a `main.cfg` payload_prefix meg NINCS atallitva, es a
-  telefonos vegponti teszt sincs meg elvegezve. Reszletek a
+  a Fly.io-n. Tanusitvany kesz es hitelesitve, `APP_BASE_URL`, a UNAS webhook
+  URL es a `main.cfg` payload_prefix is atallitva mar - a telefonos vegponti
+  teszt (linkkent ismeri-e fel a kamera) meg folyamatban van. Reszletek a
   KNOWN_LIMITATIONS.md tetejen.
+- **Uzleti szabalyok vegleg beallitva (2026-09-08)**: 1 pont = 1 Ft, jovairas
+  a brutto vasarlas 5%-a, beváltás egy tranzakcioban legfeljebb a rendeles
+  vegosszegenek 5%-a lehet. Ez utobbihoz uj config (`LOYALTY_REDEMPTION_MAX_
+  PERCENT_OF_ORDER`) es uj UI-mezo (vasarlas vegosszege a beváltás dobozban)
+  kellett - lasd ARCHITECTURE_DECISIONS.md 5. pont.
 - Fontos tapasztalat: a Fly.io "personal" org trial-korlat miatt mar egyszer
   **"suspended"** allapotba kerult az egesz app (nem csak autostop miatti
   "stopped" gepallapot) - ha `fly apps list` "suspended"-et mutat, az

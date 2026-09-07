@@ -35,31 +35,47 @@ def test_calculate_earn_points_rejects_unsupported_mode(settings):
 def test_validate_redeem_below_minimum(settings):
     settings.loyalty_redemption_min_points = 10
     with pytest.raises(RuleViolation) as excinfo:
-        validate_redeem_request(5, current_balance=100, settings=settings)
+        validate_redeem_request(5, current_balance=100, settings=settings, purchase_amount_gross=10000)
     assert excinfo.value.code == "below_minimum"
 
 
 def test_validate_redeem_above_maximum(settings):
     settings.loyalty_redemption_max_points_per_tx = 100
     with pytest.raises(RuleViolation) as excinfo:
-        validate_redeem_request(200, current_balance=1000, settings=settings)
+        validate_redeem_request(200, current_balance=1000, settings=settings, purchase_amount_gross=10000)
     assert excinfo.value.code == "above_maximum"
 
 
 def test_validate_redeem_insufficient_balance(settings):
     with pytest.raises(RuleViolation) as excinfo:
-        validate_redeem_request(50, current_balance=20, settings=settings)
+        validate_redeem_request(50, current_balance=20, settings=settings, purchase_amount_gross=10000)
     assert excinfo.value.code == "insufficient_balance"
 
 
 def test_validate_redeem_rejects_non_positive_points(settings):
     with pytest.raises(RuleViolation) as excinfo:
-        validate_redeem_request(0, current_balance=100, settings=settings)
+        validate_redeem_request(0, current_balance=100, settings=settings, purchase_amount_gross=10000)
     assert excinfo.value.code == "invalid_points"
 
 
 def test_validate_redeem_accepts_valid_request(settings):
-    validate_redeem_request(50, current_balance=100, settings=settings)  # no raise
+    validate_redeem_request(50, current_balance=100, settings=settings, purchase_amount_gross=10000)  # no raise
+
+
+def test_validate_redeem_above_order_percent_limit(settings):
+    settings.loyalty_redemption_value_per_point = 1
+    settings.loyalty_redemption_max_percent_of_order = 0.05  # max 5% of order total
+    with pytest.raises(RuleViolation) as excinfo:
+        # 100 points * 1 Ft/point = 100 Ft, but 5% of a 1000 Ft order is only 50 Ft
+        validate_redeem_request(100, current_balance=1000, settings=settings, purchase_amount_gross=1000)
+    assert excinfo.value.code == "above_order_percent_limit"
+
+
+def test_validate_redeem_within_order_percent_limit(settings):
+    settings.loyalty_redemption_value_per_point = 1
+    settings.loyalty_redemption_max_percent_of_order = 0.05
+    # 50 points * 1 Ft/point = 50 Ft, exactly 5% of a 1000 Ft order - allowed
+    validate_redeem_request(50, current_balance=1000, settings=settings, purchase_amount_gross=1000)  # no raise
 
 
 def test_redemption_value(settings):

@@ -51,6 +51,7 @@ async def test_full_customer_lifecycle(db_session, settings):
     redeem_result = await service.redeem(
         db_session, client, settings,
         qr_payload=qr_payload, external_receipt_id="STORE-01-000200", points_to_redeem=10,
+        purchase_amount_gross=10000,
         idempotency_key="STORE-01-000200:redeem", store_id=None, register_id=None, cashier_user_id=None,
     )
     assert redeem_result.balance_after == balance_after_earn - 10

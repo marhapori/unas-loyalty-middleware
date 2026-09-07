@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     loyalty_redemption_value_per_point: float = 0.0
     loyalty_redemption_min_points: int = 0
     loyalty_redemption_max_points_per_tx: int = 0
+    # 0 = nincs korlat. Pl. 0.05 = a bevaltott pontok erteke legfeljebb a
+    # tranzakcio (rendeles) brutto vegosszegenek 5%-a lehet.
+    loyalty_redemption_max_percent_of_order: float = 0.0
 
     session_secret: str = Field(default="dev-insecure-secret-change-me")
     app_base_url: str = "http://localhost:8000"
