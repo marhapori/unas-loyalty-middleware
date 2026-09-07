@@ -42,9 +42,14 @@ Reszletes doksik (mindig ezeket olvasd, mielott valtoztatsz):
 - **NYITOTT**: egyedi domain (`huseg.trendidivat.hu` - VIGYAZAT, korabban
   tevesen `hutseg` volt dokumentalva egy elirassal, mar javitva) bevezetese
   folyamatban a Fly.io-n, hogy a telefonos QR-beolvasas linkkent ismerje fel
-  az URL-t. Tanusitvany felveve, DNS meg nincs megerositve. Reszletek es a
-  hatralevo lepesek (APP_BASE_URL, UNAS webhook URL, `main.cfg` payload_prefix
-  frissitese) a KNOWN_LIMITATIONS.md tetejen.
+  az URL-t. Tanusitvany kesz es hitelesitve, `APP_BASE_URL` mar atallitva -
+  a UNAS webhook URL es a `main.cfg` payload_prefix meg NINCS atallitva, es a
+  telefonos vegponti teszt sincs meg elvegezve. Reszletek a
+  KNOWN_LIMITATIONS.md tetejen.
+- Fontos tapasztalat: a Fly.io "personal" org trial-korlat miatt mar egyszer
+  **"suspended"** allapotba kerult az egesz app (nem csak autostop miatti
+  "stopped" gepallapot) - ha `fly apps list` "suspended"-et mutat, az
+  fizetesi-mod/trial kerdes a Fly dashboardon (Billing), nem kodhiba.
 - Nincs egyidejuleg tobb alkalmazaspeldany/worker - lasd
   ARCHITECTURE_DECISIONS.md 3-4. pont.
 

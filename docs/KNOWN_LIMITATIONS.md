@@ -12,36 +12,48 @@ mar korabban is tamogatta ket formatum elfogadasaval). Felteveses ok: a
 URL-felismero regex-e nem ismer fel automatikusan. Vegleges megoldaskent egy
 sajat, ismerosebb TLD-vel rendelkezo aldomaint vezetunk be - lasd lent.
 
-Allapot:
+Allapot (frissitve 2026-09-07 este):
 
-- A Fly.io-n **letrehozva** a tanusitvany `huseg.trendidivat.hu`-ra
-  (`fly certs add huseg.trendidivat.hu --app unas-loyalty-middleware`).
+- A Fly.io-n **letrehozva es HITELESITVE** a tanusitvany
+  `huseg.trendidivat.hu`-ra (Let's Encrypt, `fly certs check` szerint
+  "Issued"/"verified"). `https://huseg.trendidivat.hu/health/live` es
+  `/login` is HTTP 200-at ad.
   **FIGYELEM**: korabban tevesen `hutseg.trendidivat.hu` (extra "t" betuvel)
   lett felveve es dokumentalva - ez a hibas tanusitvany torolve lett, a
   helyes `huseg.trendidivat.hu` valtotta fel. Ha barhol meg `hutseg`-et
   latsz (regi jegyzet, kepernyokep, UNAS-beallitas), az elirasnak szamit.
-- Szukseges DNS-rekordok (meg beallitando a domain DNS-kezelojeben):
+- Kozben az is kiderult, hogy a Fly.io "personal" org meg **trial
+  (probaidoszak)** alatt volt, ami eroforras-korlatot szab - ezt egyszer at
+  is lepte az app, es a Fly a teljes appot **"suspended"** allapotba tette
+  (ettol nem mukodott sem a sima `fly.dev` cim, sem a cert-hitelesites).
+  Fizetesi mod hozzaadasaval (Fly dashboard -> Billing -> "Add Payment
+  Method") ez megszunt, az app visszaallt "deployed"/"started" allapotba.
+  Ha a jovoben ujra "suspended" allapotot latsz a Fly dashboardon, eloszor
+  itt nezz szet, nem a kodban.
+- DNS-rekordok (mar bealitva, mukodik):
   ```
   A    huseg.trendidivat.hu -> 66.241.125.247
   AAAA huseg.trendidivat.hu -> 2a09:8280:1::184:fa8:0
   ```
-  Ellenorzes: `fly certs check huseg.trendidivat.hu --app unas-loyalty-middleware`.
 
-**Hatralevo lepesek, miutan a DNS/tanusitvany zoldre valt** (meg a VPS-re
-koltozestol fuggetlenul, meg mig Fly.io-n fut az app):
+**Hatralevo lepesek** (meg a VPS-re koltozestol fuggetlenul, meg mig Fly.io-n
+fut az app):
 
-1. Fly.io `APP_BASE_URL` secret atallitasa `https://huseg.trendidivat.hu`-ra
-   (jelenleg meg a `...fly.dev` cimre mutat).
-2. UNAS admin feluleten a `customer_registration` webhook URL-je ->
-   `https://huseg.trendidivat.hu/webhooks/unas/customer-registration`.
-3. UNAS sablon `main.cfg` `payload_prefix` erteke ->
+1. ✅ Fly.io `APP_BASE_URL` secret atallitva `https://huseg.trendidivat.hu`-ra
+   (`fly secrets set APP_BASE_URL=... --app unas-loyalty-middleware`,
+   elvegezve 2026-09-07-en, mindket gep sikeresen ujrainditva vele).
+2. ⬜ UNAS admin feluleten a `customer_registration` webhook URL-je ->
+   `https://huseg.trendidivat.hu/webhooks/unas/customer-registration`
+   (**meg nincs elvegezve** - ezt a UNAS admin feluleten kell atallitani,
+   ez nincs a kodban).
+3. ⬜ UNAS sablon `main.cfg` `payload_prefix` erteke ->
    `https://huseg.trendidivat.hu/scan/` (ez kerul bele az uj vasarloknak
    generalt QR-kodba - a mar meglevo vasarlok tokenje nem valtozik, csak a QR
-   kepen levo URL prefix).
-4. Teljes vegponti teszt: uj vasarlo regisztracio -> webhook -> QR a
+   kepen levo URL prefix). **Meg nincs elvegezve.**
+4. ⬜ Teljes vegponti teszt: uj vasarlo regisztracio -> webhook -> QR a
    profilban -> eladoi telefon kamerajaval beolvasva mar **linkkent**
    ismeri-e fel (ez az eredeti, domain-valtast inditotta problema - ezt meg
-   nem igazoltuk vissza az uj domainnel).
+   nem igazoltuk vissza az uj domainnel). **Meg nincs elvegezve.**
 
 Lasd meg [VPS_ATALLAS.md](VPS_ATALLAS.md) 2.7. pontja: ha a domain a
 VPS-koltozes utan is `huseg.trendidivat.hu` marad, a fenti 2-3. pontot **nem**
