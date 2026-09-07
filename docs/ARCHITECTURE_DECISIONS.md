@@ -90,7 +90,12 @@ helyett). Helyette:
   domain), egy fix ertekhez hasonlitas teves elutasitast okozna minden valodi
   keresre. Ezt eles teszteles kozben talaltuk es javitottuk (lasd
   `api/deps.py` `verify_same_origin`).
-- Munkamenet-cookie `SameSite=Strict` es (HTTPS mogott) `Secure`.
+- Munkamenet-cookie `SameSite=Lax` es (HTTPS mogott) `Secure`. (Korabban
+  `Strict` volt, de ez azt okozta, hogy a QR-kod telefonos kamera/QR-olvaso
+  appbol torteno megnyitasa - cross-site navigaciokent ertelmezve - minden
+  alkalommal uj bejelentkezest kenyszeritett ki, mert a `Strict` cookie ilyenkor
+  nem kerult elkuldesre. `Lax` mar engedi a sima linkkattintasos navigaciot, a
+  tenyleges CSRF-vedelmet ugyis a fenti egyedi header + Origin-ellenorzes adja.)
 
 ## 8. Session-alapu kasszas bejelentkezes, nem JWT
 

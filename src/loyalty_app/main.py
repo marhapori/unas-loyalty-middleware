@@ -56,7 +56,18 @@ def create_app() -> FastAPI:
 
     https_only = settings.app_base_url.startswith("https://")
     app.add_middleware(
-        SessionMiddleware, secret_key=settings.session_secret, same_site="strict", https_only=https_only
+        SessionMiddleware,
+        secret_key=settings.session_secret,
+        # "lax" (nem "strict"): amikor az elado a telefon kamerajaval/QR-olvaso
+        # appjaval nyitja meg a beolvasott linket, az a bongeszo szemeben egy
+        # kulso appbol jovo (cross-site) navigacio - "strict" cookie-t ilyenkor
+        # a bongeszo nem kuldene el, ami minden szkenneleskor uj bejelentkezest
+        # kenyszeritene ki. A CSRF-vedelmet ugyis kulon egyedi header + Origin-
+        # ellenorzes adja, nem a SameSite-attributum, lasd api/deps.py
+        # verify_same_origin es docs/ARCHITECTURE_DECISIONS.md 7. pont.
+        same_site="lax",
+        https_only=https_only,
+        max_age=60 * 60 * 24 * 30,
     )
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
