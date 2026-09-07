@@ -1,5 +1,75 @@
 # Ismert korlatok es eles indulas elotti teendok
 
+## NYITOTT (2026-09-07): egyedi domain (huseg.trendidivat.hu) bevezetese folyamatban
+
+**Elozmeny (2026-09-06)**: egy elado telefonjan (Android, MIUI-alapu
+kameraapp) a beolvasott `https://unas-loyalty-middleware.fly.dev/scan/...`
+QR-kodot a kamera "Szoveg"-kent (nem "Link"-kent) ismerte fel - nem lehetett
+kozvetlenul megnyitni bongeszoben, csak masolni/beilleszteni a kasszafelulet
+kezi beviteli mezojebe (ezt a `loyalty_app/loyalty/qr.py::extract_token()`
+mar korabban is tamogatta ket formatum elfogadasaval). Felteveses ok: a
+`.dev` egy ujabb/kevesbe elterjedt TLD, amit nehany telefon beepitett
+URL-felismero regex-e nem ismer fel automatikusan. Vegleges megoldaskent egy
+sajat, ismerosebb TLD-vel rendelkezo aldomaint vezetunk be - lasd lent.
+
+Allapot:
+
+- A Fly.io-n **letrehozva** a tanusitvany `huseg.trendidivat.hu`-ra
+  (`fly certs add huseg.trendidivat.hu --app unas-loyalty-middleware`).
+  **FIGYELEM**: korabban tevesen `hutseg.trendidivat.hu` (extra "t" betuvel)
+  lett felveve es dokumentalva - ez a hibas tanusitvany torolve lett, a
+  helyes `huseg.trendidivat.hu` valtotta fel. Ha barhol meg `hutseg`-et
+  latsz (regi jegyzet, kepernyokep, UNAS-beallitas), az elirasnak szamit.
+- Szukseges DNS-rekordok (meg beallitando a domain DNS-kezelojeben):
+  ```
+  A    huseg.trendidivat.hu -> 66.241.125.247
+  AAAA huseg.trendidivat.hu -> 2a09:8280:1::184:fa8:0
+  ```
+  Ellenorzes: `fly certs check huseg.trendidivat.hu --app unas-loyalty-middleware`.
+
+**Hatralevo lepesek, miutan a DNS/tanusitvany zoldre valt** (meg a VPS-re
+koltozestol fuggetlenul, meg mig Fly.io-n fut az app):
+
+1. Fly.io `APP_BASE_URL` secret atallitasa `https://huseg.trendidivat.hu`-ra
+   (jelenleg meg a `...fly.dev` cimre mutat).
+2. UNAS admin feluleten a `customer_registration` webhook URL-je ->
+   `https://huseg.trendidivat.hu/webhooks/unas/customer-registration`.
+3. UNAS sablon `main.cfg` `payload_prefix` erteke ->
+   `https://huseg.trendidivat.hu/scan/` (ez kerul bele az uj vasarloknak
+   generalt QR-kodba - a mar meglevo vasarlok tokenje nem valtozik, csak a QR
+   kepen levo URL prefix).
+4. Teljes vegponti teszt: uj vasarlo regisztracio -> webhook -> QR a
+   profilban -> eladoi telefon kamerajaval beolvasva mar **linkkent**
+   ismeri-e fel (ez az eredeti, domain-valtast inditotta problema - ezt meg
+   nem igazoltuk vissza az uj domainnel).
+
+Lasd meg [VPS_ATALLAS.md](VPS_ATALLAS.md) 2.7. pontja: ha a domain a
+VPS-koltozes utan is `huseg.trendidivat.hu` marad, a fenti 2-3. pontot **nem**
+kell ujra elvegezni, csak a DNS A/AAAA rekordot kell az uj szerver IP-jere
+atirni.
+
+## MEGOLDVA (2026-09-06): mobil nezet elcsuszasa es ismetlodo bejelentkezes
+
+Ket kulon hiba jelentkezett a telefonon hasznalt kasszafeluleten:
+
+1. **Mobil nezet elcsuszott/tulcsordult**: a kasszafelulet fooszlopa
+   (`.layout`) es a jovairas/bevaltas dobozok (`.op-grid`) fixen ket
+   oszlopban voltak megjelenitve CSS-ben, media query nelkul - keskeny
+   telefonon ez osszepreselodest/oldalirányú tulcsordulast okozott. Javitva
+   egy 720px-es breakpoint-tal (`static/styles.css`), ami alatt a fooszlop,
+   a ket muvelet-doboz es a login-kartya is egy oszlopba rendezodik.
+2. **Az elado telefonja minden QR-beolvasasnal ujra bejelentkezest kert**:
+   a session-cookie `SameSite=Strict`-tel volt beallitva. Amikor a QR-t a
+   telefon kamerajaval/kulon QR-olvaso appal olvastak be es a link onnan
+   nyilt meg a bongeszoben, ez a bongeszo szemeben egy masik appbol jovo
+   (cross-site) navigacio - a `Strict` cookie-t ilyenkor a bongeszo nem
+   kuldte el, igy minden beolvasas uj bejelentkezest kenyszeritett ki.
+   Javitva: a cookie `SameSite=Lax`-ra allitva (`main.py`), kifejezett
+   30 napos `max_age`-dzsel. A CSRF-vedelmet ez nem gyengiti, mert az eleve
+   nem a SameSite-attributumra tamaszkodik, hanem egyedi header + Origin-
+   ellenorzesre (lasd `api/deps.py` `verify_same_origin` es
+   [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md) 7. pont).
+
 ## MEGOLDVA: Render -> UNAS kapcsolati blokk (2026-09-04/05)
 
 **Frissites (2026-09-05)**: 24+ ora varakozas utan a blokk tovabbra is
