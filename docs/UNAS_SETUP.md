@@ -39,9 +39,12 @@ letrehozasa:
 - **Cel URL**: `https://<a-te-domain-ed>/webhooks/unas/customer-registration`
   (a middleware kozvetlenul HTTPS-en legyen elerheto, lasd
   [DEPLOYMENT.md](DEPLOYMENT.md))
-- **HMAC titok**: generalj egy eros veletlen erteket, allitsd be itt ES a
-  middleware `.env` `UNAS_WEBHOOK_HMAC_SECRET` mezojeben is - a kettonek
-  pontosan egyeznie kell.
+- **HMAC titok**: ezt a UNAS admin feluleten, magaban az automatizmus
+  beallitasaban add meg/generald (ne egy kulso szkripttel kitalalt erteket) -
+  utana ezt a UNAS-ban lathato/megadott erteket masold at valtoztatas nelkul
+  a middleware `.env` `UNAS_WEBHOOK_HMAC_SECRET` mezojebe is. A ket helyen
+  tarolt ertek kell, hogy PONTOSAN, karakterre egyezzen - ha nem egyezik,
+  minden webhook ervenytelen alairasunak fog szamitani es elutasitasra kerul.
 
 > A webhook pontos payload-szerkezetet a hivatalos dokumentacio nem irja le
 > peldaval. A middleware `loyalty_app/loyalty/webhook_adapter.py` fajlja egy
