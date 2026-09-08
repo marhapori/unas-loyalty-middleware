@@ -333,3 +333,60 @@ Ha a domain NEM változik (csak a mögötte lévő szerver), ezt a két pontot
 - [ ] `ADMIN_BOOTSTRAP_TOKEN` üresen van hagyva (végpont `404`-et ad)
 - [ ] A régi szerver (Fly.io app) csak EZUTÁN állítható le, hogy legyen
       visszaút, ha valami nem stimmel
+
+### 2.9. Hogyan frissítsd az alkalmazást, ha már a VPS-en fut
+
+Ez a Fly.io-s `fly deploy` VPS-es megfelelője - erre lesz szükséged minden
+alkalommal, amikor ez a repo (kódváltoztatás, pl. ez a beszélgetés is) frissül,
+és azt élesre akarod vinni. **Nincs automatikus deploy** (nincs `fly deploy`,
+nincs `release_command`) - ezt a négy lépést kézzel (vagy egy sajátírású
+szkripttel) kell elvégezned minden frissítéskor:
+
+```bash
+cd /opt/loyalty-app/app
+
+# 1. Legfrissebb kod behuzasa
+sudo -u loyaltyapp git pull
+
+# 2. Fuggosegek frissitese - CSAK akkor kell, ha a pyproject.toml valtozott
+#    (uj csomag/verzio) - artalmatlan akkor is lefuttatni, ha nem valtozott
+sudo -u loyaltyapp /opt/loyalty-app/.venv/bin/pip install -e .
+
+# 3. Migraciok - CSAK akkor csinal barmit, ha uj migracios fajl kerult be
+#    a migrations/versions/ ala; ha nincs uj migracio, ez no-op
+sudo -u loyaltyapp /opt/loyalty-app/.venv/bin/alembic upgrade head
+
+# 4. Alkalmazas ujrainditasa, hogy az uj kod tenylegesen fusson
+sudo systemctl restart loyalty-app
+sudo systemctl status loyalty-app
+```
+
+**Fontos kulonbsegek a Fly.io-s megszokott folyamathoz kepest:**
+
+- A Fly.io-n a `fly deploy` egyben buildel, migral (`release_command`) es
+  gordulo (rolling) frissitest vegez ket gepen, gyakorlatilag lenullazott
+  kiesessel. A VPS-en **egyetlen peldany fut** (lasd `--workers 1`,
+  ARCHITECTURE_DECISIONS.md 3-4. pont), igy a `systemctl restart` alatt (attol
+  fuggoen, hogy a diszk/gep milyen gyors, jellemzoen 1-3 masodperc) a
+  kasszafelulet **nem valaszol** - ezt erdemes forgalommentes idoszakban
+  (pl. zarva tartas alatt) elvegezni, nem nyitvatartas kozben.
+- Ha a frissites kozben `.env`-ben ELVART uj kornyezeti valtozo is bekerult a
+  kodba (pl. ebben a beszelgetesben most a `LOYALTY_REDEMPTION_MAX_PERCENT_OF_
+  ORDER`), azt **kezzel** hozza kell adnod a szerver `.env` fajljahoz
+  (`sudo -u loyaltyapp nano /opt/loyalty-app/app/.env`) A `git pull` UTAN, DE a
+  `systemctl restart` ELOTT - kulonben a regi (hianyzo) ertekkel/alapertelmezett-
+  tel indul ujra az app. Nezd at a `.env.example` git-diffjet
+  (`git log -p -- .env.example`) minden frissitesnel, hogy lasd, valtozott-e
+  valami.
+- Ha a rollback-re van szukseg (a frissites utan valami elromlott): `git log`
+  -bol keresd meg az elozo commit hash-t, `sudo -u loyaltyapp git checkout
+  <regi-hash>`, majd ismetled a 2-4. lepest. Ha kozben migracio is lefutott,
+  a visszalepes bonyolultabb (Alembic `downgrade` vagy kezi DB-javitas
+  szukseges) - ezert erdemes migraciot tartalmazo valtoztatast kulon,
+  ovatosabban tesztelni, mint egy sima kodfrissitest.
+
+Ha ezt a kezi folyamatot korulmenyesnek erzed tobb szerverfrissites utan,
+erdemes lehet egy egyszeru `deploy.sh` szkriptet irni a fenti 4 lepesbol
+(`git pull && pip install -e . && alembic upgrade head && systemctl restart
+loyalty-app`), vagy hosszabb tavon GitHub Actions + SSH alapu automatikus
+deploy-t bevezetni - egyik sincs meg megvalositva ebben a projektben.
