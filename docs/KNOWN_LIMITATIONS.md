@@ -42,18 +42,42 @@ fut az app):
 1. ✅ Fly.io `APP_BASE_URL` secret atallitva `https://huseg.trendidivat.hu`-ra
    (`fly secrets set APP_BASE_URL=... --app unas-loyalty-middleware`,
    elvegezve 2026-09-07-en, mindket gep sikeresen ujrainditva vele).
-2. ⬜ UNAS admin feluleten a `customer_registration` webhook URL-je ->
-   `https://huseg.trendidivat.hu/webhooks/unas/customer-registration`
-   (**meg nincs elvegezve** - ezt a UNAS admin feluleten kell atallitani,
-   ez nincs a kodban).
-3. ⬜ UNAS sablon `main.cfg` `payload_prefix` erteke ->
-   `https://huseg.trendidivat.hu/scan/` (ez kerul bele az uj vasarloknak
-   generalt QR-kodba - a mar meglevo vasarlok tokenje nem valtozik, csak a QR
-   kepen levo URL prefix). **Meg nincs elvegezve.**
+2. ✅ UNAS admin feluleten (a VALODI, eles boltnal) a `customer_registration`
+   webhook URL-je beallitva -> `https://huseg.trendidivat.hu/webhooks/unas/
+   customer-registration`, uj HMAC-titokkal (lasd VPS_HANDOFF_SECRETS.md).
+   **DE**: a Fly.io app kozben felfuggesztve van (lasd lent, uj bejegyzes),
+   szoval ez a webhook jelenleg NEM eri el a szervert - a beallitas kesz, a
+   tenyleges mukodes meg nincs igazolva.
+3. ⬜ UNAS sablon `main.cfg` `payload_prefix` erteke -> `https://huseg.
+   trendidivat.hu/scan/` A VALODI BOLTNAL - ezt meg nem erositettuk meg
+   ebben a beszelgetesben (korabban a teszt boltnal mar elvegeztuk, de az
+   most mar nem releváns, mert athelyeztuk a beallitast az eles boltra).
+   **Ellenorizendo/elvegezendo.**
 4. ⬜ Teljes vegponti teszt: uj vasarlo regisztracio -> webhook -> QR a
    profilban -> eladoi telefon kamerajaval beolvasva mar **linkkent**
-   ismeri-e fel (ez az eredeti, domain-valtast inditotta problema - ezt meg
-   nem igazoltuk vissza az uj domainnel). **Meg nincs elvegezve.**
+   ismeri-e fel. Ez csak azutan vegezheto el, hogy a Fly.io app ujra elerheto
+   (lasd lent) VAGY mar a VPS-en fut.
+
+**UJ (2026-09-08): a valodi elesboltra allas kozben derult ki, hogy a Fly.io
+trial VEGLEGESEN lejart** ("trial has ended" hiba minden `fly secrets
+set`/`fly deploy` probalkozasnal) - nem csak resource-korlat-tuli
+"suspended" allapot, mint korabban, hanem tartos leallas, amig fizetesi
+modot nem adtok hozza VAGY at nem koltoztok VPS-re. Emiatt a most beallitott
+uj UNAS-ertekek (`UNAS_API_KEY`, `UNAS_LOYALTY_PARAM_ID`,
+`UNAS_WEBHOOK_HMAC_SECRET` - lasd VPS_HANDOFF_SECRETS.md) csak a HELYI
+`.env`-ben es az atadasi dokumentumban vannak frissitve, a Fly.io-n MEG A
+REGI, TESZT-BOLTI ertekek allnak. Ha a Fly.io app ujra elerhetove valik,
+ELOSZOR ezt a harom valtozot kell ott is frissiteni.
+
+**UJ (2026-09-08): 9560 "engedelyezett" vasarlonak mar van tokenje** - ezt
+NEM a webhookon/API-n keresztul, hanem egy egyszeri, UNAS Excel-import-alapu
+modszerrel poldottuk meg (lasd a beszelgetes tortenete, vagy kerdezd meg az
+uzemeltetot), mert 9560 vasarlo API-n keresztuli feltoltese (kb. 19 000
+hivas) tullepte volna a UNAS VIP csomag 6000 hivas/ora/IP limitjet (lasd
+UNAS_API_gyakorlati_utmutato.md 11. fejezet). Ha kesobb ujra kell ilyen
+tomeges backfill-t vegezni (pl. meg tobb "engedelyezett" vasarlo kerul fel),
+ugyanezt a modszert erdemes ismetelni, NEM a sima `backfill-customers`
+parancsot nagy tetelszamra.
 
 Lasd meg [VPS_ATALLAS.md](VPS_ATALLAS.md) 2.7. pontja: ha a domain a
 VPS-koltozes utan is `huseg.trendidivat.hu` marad, a fenti 2-3. pontot **nem**

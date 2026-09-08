@@ -27,23 +27,43 @@ Reszletes doksik (mindig ezeket olvasd, mielott valtoztatsz):
 - [docs/UNAS_SETUP.md](docs/UNAS_SETUP.md) - UNAS admin/API/webhook beallitas
 - [docs/CASHIER_GUIDE.md](docs/CASHIER_GUIDE.md) - kasszas hasznalati utmutato
 
-## Aktualis allapot (2026-09-07)
+## Aktualis allapot (2026-09-08)
 
 - **Eles/teszt hosting**: Fly.io, app nev `unas-loyalty-middleware`
   (`unas-loyalty-middleware.fly.dev`). Render.com-rol koltoztettuk at, mert a
   Render szerverei tartosan nem ertek el a UNAS API-t (lasd
-  KNOWN_LIMITATIONS.md).
+  KNOWN_LIMITATIONS.md). **A Fly.io trial VEGLEGESEN lejart (2026-09-08)** -
+  minden `fly deploy`/`fly secrets set` "trial has ended" hibat ad, amig
+  fizetesi modot nem adnak hozza VAGY meg nem tortenik a VPS-koltozes
+  (Sybell.hu). Emiatt a Fly.io-n MEG A REGI (teszt UNAS-bolti) ertekek
+  vannak beallitva - lasd KNOWN_LIMITATIONS.md.
 - **Adatbazis**: Render Postgres (kulon, tartos szolgaltatas, nem fugg a
   webalkalmazas hostingjatol - a Fly.io elhagyasa onmagaban NEM erinti). Ha
   majd VPS-re koltoztok es ott sajat Postgres-t vezettek be (nem kotelezo,
   de ajanlott, hogy ne fuggjetek kulso szolgaltatotol), a meglevo adatokat
   `pg_dump`/`pg_restore`-ral at KELL masolni - lasd VPS_ATALLAS.md 2.3, ahol
   mar konkret, futtathato parancsok is vannak hozza.
+- **UNAS: atallas a TESZT boltrol (webaruhazmester01.unas.hu) a VALODI eles
+  boltra (trendidivat)** (2026-09-08): uj `UNAS_API_KEY`, uj
+  `UNAS_LOYALTY_PARAM_ID` (6599411), uj `UNAS_WEBHOOK_HMAC_SECRET` - lasd
+  helyi `docs/VPS_HANDOFF_SECRETS.md` (NEM git-ben). A `customer_registration`
+  webhook be van allitva a valodi boltra a UNAS adminban, de a Fly.io
+  felfuggesztese miatt jelenleg nem eri el a szervert - lasd
+  KNOWN_LIMITATIONS.md.
+- **9560 "engedelyezett" vasarlonak MAR VAN tokenje** (2026-09-08): egy
+  egyszeri, UNAS Excel-import-alapu modszerrel toltottuk fel oket
+  (`loyalty_customers` tabla kozvetlen feltoltese + UNAS-oldali tomeges
+  parameter-import), NEM API-hivasokkal, mert az API-n keresztuli feltoltes
+  tullepte volna a UNAS VIP 6000 hivas/ora limitjet. Lasd
+  KNOWN_LIMITATIONS.md a modszer reszleteivel, ha kesobb ujra kell ilyet
+  csinalni.
 - **NYITOTT**: egyedi domain (`huseg.trendidivat.hu` - VIGYAZAT, korabban
   tevesen `hutseg` volt dokumentalva egy elirassal, mar javitva) bevezetese
-  a Fly.io-n. Tanusitvany kesz es hitelesitve, `APP_BASE_URL`, a UNAS webhook
-  URL es a `main.cfg` payload_prefix is atallitva mar - a telefonos vegponti
-  teszt (linkkent ismeri-e fel a kamera) meg folyamatban van. Reszletek a
+  a Fly.io-n. Tanusitvany kesz es hitelesitve, `APP_BASE_URL` es a UNAS
+  webhook URL is atallitva mar (a valodi boltra) - a `main.cfg`
+  payload_prefix VALODI BOLTRA valo atallitasa meg ellenorizendo, es a
+  telefonos vegponti teszt (linkkent ismeri-e fel a kamera) meg nem
+  igazolhato, amig a Fly.io app felfuggesztve van. Reszletek a
   KNOWN_LIMITATIONS.md tetejen.
 - **Uzleti szabalyok vegleg beallitva (2026-09-08)**: 1 pont = 1 Ft, jovairas
   a brutto vasarlas 5%-a, beváltás egy tranzakcioban legfeljebb a rendeles
