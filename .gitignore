@@ -13,3 +13,4 @@ dev_mock_unas.py
 ngrok.exe
 ngrok.log
 docs/CREDENTIALS.md
+docs/VPS_HANDOFF_SECRETS.md
