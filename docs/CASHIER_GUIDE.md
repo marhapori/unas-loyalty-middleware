@@ -5,6 +5,10 @@
 Nyisd meg a kassza gepen a bongeszoben a middleware cimet (pl.
 `https://loyalty.pelda.hu/login`), add meg a felhasznalonevedet es jelszavadat.
 
+A tenyleges felhasznalonevek/jelszavak `docs/CREDENTIALS.md`-ben vannak - ez a
+fajl SZANDEKOSAN nincs git-ben (lasd a fajl elejen a magyarazatot), csak
+helyileg letezik azon a gepen, ahol letrehoztuk.
+
 ## Vasarlo beolvasasa
 
 1. Kattints a "QR beolvasas" mezobe ( altalaban mar automatikusan oda van
