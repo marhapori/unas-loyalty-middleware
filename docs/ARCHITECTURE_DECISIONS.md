@@ -68,9 +68,9 @@ boltnak meg kell adnia a valos ertekeket.
 
 **Vegleges uzleti dontes (2026-09-08)**: 1 pont = 1 Ft bevaltaskor
 (`LOYALTY_REDEMPTION_VALUE_PER_POINT=1`), a jovairas a brutto vasarlasi osszeg
-5%-a (`LOYALTY_POINTS_PER_CURRENCY_UNIT=0.05`), es a beváltott pontok erteke
-egy tranzakcioban legfeljebb a rendeles vegosszegenek 5%-a lehet
-(`LOYALTY_REDEMPTION_MAX_PERCENT_OF_ORDER=0.05`, uj beallitas - lasd
+0,5%-a (`LOYALTY_POINTS_PER_CURRENCY_UNIT=0.005`), es a beváltott pontok erteke
+egy tranzakcioban legfeljebb a rendeles vegosszegenek 0,5%-a lehet
+(`LOYALTY_REDEMPTION_MAX_PERCENT_OF_ORDER=0.005`, uj beallitas - lasd
 `loyalty/rules.py::validate_redeem_request`). Ez utobbi **nem** azonos a mar
 korabban is letezo `LOYALTY_REDEMPTION_MAX_POINTS_PER_TX`-szel (ami egy fix,
 osszegtol fuggetlen pontszam-plafon) - a ketto egyutt is ervenyesul, ha
@@ -121,3 +121,6 @@ tokenmegosztasra, a kasszafelulet ugyanazon a domainen fut, mint az API.
 Nincs Node/npm ezen a gepen. A kasszafelulet szerveroldalon renderelt HTML +
 minimalis vanilla JS (`fetch`, DOM API) - nincs bundler, nincs build-lepes, igy
 a fejlesztes es a telepites is egyszerubb marad.
+
+
+2026-09-11: A fix pontplafon megszunt (LOYALTY_REDEMPTION_MAX_POINTS_PER_TX=0). A 10 000 Ft-os bevaltasi osszeghatart a bolt manualisan kezeli.
